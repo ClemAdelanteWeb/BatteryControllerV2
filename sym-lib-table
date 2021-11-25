@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name Battery-Controller-rescue)(type Legacy)(uri ${KIPRJMOD}/Battery-Controller-rescue.lib)(options "")(descr ""))
+  (lib (name Charleslabs_Parts)(type Legacy)(uri ${KIPRJMOD}/parts/kicad_parts-master/Charleslabs_Parts.lib)(options "")(descr ""))
+)

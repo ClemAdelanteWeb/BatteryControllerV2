@@ -1,0 +1,248 @@
+EESchema Schematic File Version 4
+LIBS:Battery-Controller-cache
+EELAYER 29 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "Battery Controller Almarita Boat"
+Date "2021-01-05"
+Rev "V2"
+Comp ""
+Comment1 "Clément Lambert"
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Wire Wire Line
+	950  1300 1100 1300
+Text GLabel 950  1300 0    50   Input ~ 0
+12V
+$Comp
+L Regulator_Switching:LM2674N-5.0 U?
+U 1 1 5FF4E836
+P 1950 1500
+F 0 "U?" H 1950 1967 50  0000 C CNN
+F 1 "LM2674N-5.0" H 1950 1876 50  0000 C CNN
+F 2 "Package_DIP:DIP-8_W7.62mm" H 2000 1150 50  0001 L CIN
+F 3 "http://www.ti.com/lit/ds/symlink/lm2674.pdf" H 1950 1500 50  0001 C CNN
+	1    1950 1500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 5FF5067C
+P 1100 1600
+F 0 "C?" H 1218 1646 50  0000 L CNN
+F 1 "100uF" H 1218 1555 50  0000 L CNN
+F 2 "" H 1138 1450 50  0001 C CNN
+F 3 "~" H 1100 1600 50  0001 C CNN
+	1    1100 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 5FF50EA8
+P 4100 1850
+F 0 "C?" H 4218 1896 50  0000 L CNN
+F 1 "100uF" H 4218 1805 50  0000 L CNN
+F 2 "" H 4138 1700 50  0001 C CNN
+F 3 "~" H 4100 1850 50  0001 C CNN
+	1    4100 1850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 5FF515C6
+P 2750 1500
+F 0 "C?" V 2498 1500 50  0000 C CNN
+F 1 "10nF" V 2589 1500 50  0000 C CNN
+F 2 "" H 2788 1350 50  0001 C CNN
+F 3 "~" H 2750 1500 50  0001 C CNN
+	1    2750 1500
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1100 1300 1100 1450
+Connection ~ 1100 1300
+Wire Wire Line
+	1100 1300 1450 1300
+Wire Wire Line
+	1100 1750 1100 2000
+Wire Wire Line
+	1950 1900 1950 2100
+Wire Wire Line
+	2450 1700 2750 1700
+Connection ~ 3700 1700
+Wire Wire Line
+	2450 1500 2600 1500
+Wire Wire Line
+	2900 1500 3700 1500
+Wire Wire Line
+	3700 1500 3700 1700
+$Comp
+L Diode:1N5822 D?
+U 1 1 5FF54855
+P 2750 1850
+F 0 "D?" V 2704 1929 50  0000 L CNN
+F 1 "1N5822" V 2795 1929 50  0000 L CNN
+F 2 "Diode_THT:D_DO-201AD_P15.24mm_Horizontal" H 2750 1675 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 2750 1850 50  0001 C CNN
+	1    2750 1850
+	0    1    1    0   
+$EndComp
+Connection ~ 2750 1700
+Wire Wire Line
+	2750 1700 3050 1700
+Wire Wire Line
+	2450 1300 3700 1300
+Wire Wire Line
+	3700 1300 3700 1500
+Connection ~ 3700 1500
+$Comp
+L pspice:INDUCTOR L?
+U 1 1 5FF57114
+P 3300 1700
+F 0 "L?" H 3300 1915 50  0000 C CNN
+F 1 "100uH" H 3300 1824 50  0000 C CNN
+F 2 "" H 3300 1700 50  0001 C CNN
+F 3 "~" H 3300 1700 50  0001 C CNN
+	1    3300 1700
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5FF59D59
+P 1950 2100
+F 0 "#PWR?" H 1950 1850 50  0001 C CNN
+F 1 "GND" H 1955 1927 50  0000 C CNN
+F 2 "" H 1950 2100 50  0001 C CNN
+F 3 "" H 1950 2100 50  0001 C CNN
+	1    1950 2100
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5FF5A26C
+P 1100 2000
+F 0 "#PWR?" H 1100 1750 50  0001 C CNN
+F 1 "GND" H 1105 1827 50  0000 C CNN
+F 2 "" H 1100 2000 50  0001 C CNN
+F 3 "" H 1100 2000 50  0001 C CNN
+	1    1100 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5FF5B03B
+P 2750 2100
+F 0 "#PWR?" H 2750 1850 50  0001 C CNN
+F 1 "GND" H 2755 1927 50  0000 C CNN
+F 2 "" H 2750 2100 50  0001 C CNN
+F 3 "" H 2750 2100 50  0001 C CNN
+	1    2750 2100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2750 2000 2750 2100
+Connection ~ 4100 1700
+$Comp
+L power:GND #PWR?
+U 1 1 5FF5C47A
+P 4100 2000
+F 0 "#PWR?" H 4100 1750 50  0001 C CNN
+F 1 "GND" H 4105 1827 50  0000 C CNN
+F 2 "" H 4100 2000 50  0001 C CNN
+F 3 "" H 4100 2000 50  0001 C CNN
+	1    4100 2000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3700 1700 4100 1700
+Wire Wire Line
+	3550 1700 3700 1700
+Text GLabel 4750 1700 2    50   Input ~ 0
+5V
+Wire Notes Line
+	700  2850 5350 2850
+Wire Notes Line
+	5350 2850 5350 700 
+Wire Notes Line
+	5350 700  700  700 
+Wire Notes Line
+	700  700  700  2850
+Text Notes 4650 2750 0    50   ~ 0
+Alimentation 5V\nOutput 5V 500mA\nInput 7-40V
+Wire Wire Line
+	4100 1700 4750 1700
+$Comp
+L MCU_Module:Arduino_Nano_v3.x A?
+U 1 1 5FF622F3
+P 2350 4550
+F 0 "A?" H 2350 3461 50  0000 C CNN
+F 1 "Arduino_Nano_v3.x" H 2350 3370 50  0000 C CNN
+F 2 "Module:Arduino_Nano" H 2500 3600 50  0001 L CNN
+F 3 "http://www.mouser.com/pdfdocs/Gravitech_Arduino_Nano3_0.pdf" H 2350 3550 50  0001 C CNN
+	1    2350 4550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Analog_ADC:ADS1115IDGS U?
+U 1 1 5FF655F5
+P 8350 1950
+F 0 "U?" H 8350 2631 50  0000 C CNN
+F 1 "ADS1115IDGS" H 8350 2540 50  0000 C CNN
+F 2 "Package_SO:TSSOP-10_3x3mm_P0.5mm" H 8350 1450 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/ads1113.pdf" H 8300 1050 50  0001 C CNN
+	1    8350 1950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7950 1850 7450 1850
+Wire Wire Line
+	7950 1950 7450 1950
+Wire Wire Line
+	7450 2050 7950 2050
+Wire Wire Line
+	7950 2150 7450 2150
+Wire Wire Line
+	8350 1450 8350 1100
+Wire Wire Line
+	8350 1100 7650 1100
+$Comp
+L Device:CP C?
+U 1 1 5FF67E8D
+P 7650 1250
+F 0 "C?" H 7768 1296 50  0000 L CNN
+F 1 "0.1uF" H 7768 1205 50  0000 L CNN
+F 2 "" H 7688 1100 50  0001 C CNN
+F 3 "~" H 7650 1250 50  0001 C CNN
+	1    7650 1250
+	1    0    0    -1  
+$EndComp
+Connection ~ 7650 1100
+$Comp
+L power:GND #PWR?
+U 1 1 5FF6860C
+P 7650 1400
+F 0 "#PWR?" H 7650 1150 50  0001 C CNN
+F 1 "GND" H 7655 1227 50  0000 C CNN
+F 2 "" H 7650 1400 50  0001 C CNN
+F 3 "" H 7650 1400 50  0001 C CNN
+	1    7650 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5FF68C08
+P 8350 2350
+F 0 "#PWR?" H 8350 2100 50  0001 C CNN
+F 1 "GND" H 8355 2177 50  0000 C CNN
+F 2 "" H 8350 2350 50  0001 C CNN
+F 3 "" H 8350 2350 50  0001 C CNN
+	1    8350 2350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7200 1100 7650 1100
+$EndSCHEMATC
