@@ -18,14 +18,14 @@ void BlueSeaLatchingRelay::setClosed() {
 
     if(this->getState() != BlueSeaLatchingRelay::RELAY_CLOSE) {
     
-        analogWrite(this->closePin, 255);
+        digitalWrite(this->closePin, 1);
         
         Serial.print(this->name);
         Serial.println(F(" closing"));
         
         delay(latchingDurationTime);
         
-        analogWrite(this->closePin, 0);
+        digitalWrite(this->closePin, 0);
         
         // delay to be sure that 2 relays can't be activated at the same time (causing fuse blow)
         delay(800);
@@ -45,14 +45,14 @@ void BlueSeaLatchingRelay::setOpened() {
     
     if(this->getState() != BlueSeaLatchingRelay::RELAY_OPEN) {
     
-        analogWrite(this->openPin, 255);
+        digitalWrite(this->openPin, 1);
         
         Serial.print(this->name);
         Serial.println(F(" opening"));
         
         delay(latchingDurationTime);
         
-        analogWrite(this->openPin, 0);
+        digitalWrite(this->openPin, 0);
         
         // delay to be sure that 2 relays can't be activated at the same time (causing fuse blow)
         delay(800);
@@ -116,12 +116,12 @@ void BlueSeaLatchingRelay::startCycle() {
 byte BlueSeaLatchingRelay::getState() {
 	
 	if(this->statePin) {
-	 	int analogState = analogRead(this->statePin);
-	 	if(analogState >= 100 && (this->state != BlueSeaLatchingRelay::RELAY_OPEN)) {
+	 	int digitalState = digitalRead(this->statePin);
+	 	if(digitalState == HIGH && (this->state != BlueSeaLatchingRelay::RELAY_OPEN)) {
 	 		this->state = BlueSeaLatchingRelay::RELAY_OPEN;
 	 	}
 	 	
-	 	if(analogState < 100 && (this->state != BlueSeaLatchingRelay::RELAY_CLOSE)) {
+	 	if(digitalState == LOW && (this->state != BlueSeaLatchingRelay::RELAY_CLOSE)) {
 	 		this->state = BlueSeaLatchingRelay::RELAY_CLOSE;
 	 	}
 	}

@@ -325,17 +325,6 @@ F 3 "~" H 2100 7400 50  0001 C CNN
 	1    2100 7400
 	0    -1   -1   0   
 $EndComp
-$Comp
-L power:+5V #PWR0125
-U 1 1 61BBF6FB
-P 2250 7400
-F 0 "#PWR0125" H 2250 7250 50  0001 C CNN
-F 1 "+5V" H 2265 7573 50  0000 C CNN
-F 2 "" H 2250 7400 50  0001 C CNN
-F 3 "" H 2250 7400 50  0001 C CNN
-	1    2250 7400
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	1750 7400 1900 7400
 Connection ~ 1900 7400
@@ -878,15 +867,13 @@ Text GLabel 7200 4500 2    50   Input ~ 0
 A2
 Text GLabel 1750 7400 0    50   Input ~ 0
 THERMOCOUPLE-IN-P
-Wire Notes Line
-	750  7050 2500 7050
 $Comp
 L Connector:Screw_Terminal_01x08 J3
 U 1 1 61D0860E
 P 10100 2250
 F 0 "J3" H 10180 2242 50  0000 L CNN
-F 1 "Screw_Terminal_01x08 - RELAY STATUS" H 10180 2151 50  0000 L CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-7-5.08_1x07_P5.08mm_Horizontal" H 10100 2250 50  0001 C CNN
+F 1 "Screw_Terminal_01x08" H 10180 2151 50  0000 L CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-8-5.08_1x08_P5.08mm_Horizontal" H 10100 2250 50  0001 C CNN
 F 3 "~" H 10100 2250 50  0001 C CNN
 	1    10100 2250
 	1    0    0    -1  
@@ -908,10 +895,6 @@ F 3 "" H 1900 7700 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	1900 7700 1750 7700
-Wire Notes Line
-	2500 8100 750  8100
-Wire Notes Line
-	2500 7050 2500 8100
 Wire Notes Line
 	750  7050 750  8100
 $Comp
@@ -1466,4 +1449,23 @@ Text GLabel 9900 3200 0    50   Input ~ 0
 CELL-1
 Text GLabel 9900 2450 0    50   Input ~ 0
 5V
+Text GLabel 2350 7400 2    50   Input ~ 0
+3.3V
+Text GLabel 2350 7550 2    50   Input ~ 0
+HREF
+Wire Wire Line
+	2200 7400 2250 7400
+Wire Wire Line
+	2250 7400 2350 7400
+Connection ~ 2250 7400
+Wire Wire Line
+	2350 7550 2250 7550
+Wire Wire Line
+	2250 7550 2250 7400
+Wire Notes Line
+	2700 7050 2700 8100
+Wire Notes Line
+	750  7050 2700 7050
+Wire Notes Line
+	750  8100 2700 8100
 $EndSCHEMATC
