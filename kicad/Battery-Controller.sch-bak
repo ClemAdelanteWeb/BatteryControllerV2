@@ -115,7 +115,7 @@ L Device:R R5
 U 1 1 61AFDF3A
 P 2250 4600
 F 0 "R5" V 2043 4600 50  0000 C CNN
-F 1 "2.2K" V 2134 4600 50  0000 C CNN
+F 1 "5.1K" V 2134 4600 50  0000 C CNN
 F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 2180 4600 50  0001 C CNN
 F 3 "~" H 2250 4600 50  0001 C CNN
 	1    2250 4600
@@ -126,7 +126,7 @@ L Device:R R8
 U 1 1 61AFDF44
 P 2550 4600
 F 0 "R8" V 2757 4600 50  0000 C CNN
-F 1 "1K" V 2666 4600 50  0000 C CNN
+F 1 "2.2K" V 2666 4600 50  0000 C CNN
 F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 2480 4600 50  0001 C CNN
 F 3 "~" H 2550 4600 50  0001 C CNN
 	1    2550 4600
@@ -891,7 +891,7 @@ F 3 "~" H 10100 2100 50  0001 C CNN
 	1    10100 2100
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 2200 0    50   Input ~ 0
+Text GLabel 9900 2100 0    50   Input ~ 0
 THERMOCOUPLE-IN-N
 Text GLabel 1750 7700 0    50   Input ~ 0
 THERMOCOUPLE-IN-N
@@ -963,7 +963,7 @@ Text GLabel 13450 2250 0    50   Input ~ 0
 VICTRON-IN-1
 Text GLabel 13450 2350 0    50   Input ~ 0
 VICTRON-IN-2
-Text GLabel 9900 2100 0    50   Input ~ 0
+Text GLabel 9900 2200 0    50   Input ~ 0
 THERMOCOUPLE-IN-P
 Text GLabel 6500 1000 0    50   Input ~ 0
 CHARGE-RELAY-STATUS
@@ -1056,8 +1056,6 @@ F 3 "~" H 10100 3300 50  0001 C CNN
 	1    10100 3300
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 3200 0    50   Input ~ 0
-CELL-1
 Text GLabel 9900 3300 0    50   Input ~ 0
 CELL-2
 Text GLabel 9900 3400 0    50   Input ~ 0
@@ -1488,4 +1486,6 @@ Text Notes 1800 4250 0    50   ~ 0
 10.95V
 Text Notes 1800 4600 0    50   ~ 0
 14.6V
+Text GLabel 9900 3200 0    50   Input ~ 0
+CELL-1
 $EndSCHEMATC

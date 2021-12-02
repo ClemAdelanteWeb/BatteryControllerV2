@@ -801,7 +801,7 @@ F 3 "~" H 10100 900 50  0001 C CNN
 	1    10100 900 
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 2300 0    50   Input ~ 0
+Text GLabel 9900 2350 0    50   Input ~ 0
 CHARGING-STATUS
 $Comp
 L Connector:Screw_Terminal_01x04 J2
@@ -881,17 +881,17 @@ THERMOCOUPLE-IN-P
 Wire Notes Line
 	750  7050 2500 7050
 $Comp
-L Connector:Screw_Terminal_01x06 J3
+L Connector:Screw_Terminal_01x08 J3
 U 1 1 61D0860E
-P 10100 2100
-F 0 "J3" H 10180 2092 50  0000 L CNN
-F 1 "Screw_Terminal_01x06 - RELAY STATUS" H 10180 2001 50  0000 L CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-6-5.08_1x06_P5.08mm_Horizontal" H 10100 2100 50  0001 C CNN
-F 3 "~" H 10100 2100 50  0001 C CNN
-	1    10100 2100
+P 10100 2250
+F 0 "J3" H 10180 2242 50  0000 L CNN
+F 1 "Screw_Terminal_01x08 - RELAY STATUS" H 10180 2151 50  0000 L CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-7-5.08_1x07_P5.08mm_Horizontal" H 10100 2250 50  0001 C CNN
+F 3 "~" H 10100 2250 50  0001 C CNN
+	1    10100 2250
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 2200 0    50   Input ~ 0
+Text GLabel 9900 2150 0    50   Input ~ 0
 THERMOCOUPLE-IN-N
 Text GLabel 1750 7700 0    50   Input ~ 0
 THERMOCOUPLE-IN-N
@@ -917,17 +917,17 @@ Wire Notes Line
 $Comp
 L Connector:Screw_Terminal_01x02 J4
 U 1 1 61D1C628
-P 10100 2600
-F 0 "J4" H 10180 2592 50  0000 L CNN
-F 1 "Screw_Terminal_01x02 - Battery IN" H 10180 2501 50  0000 L CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal" H 10100 2600 50  0001 C CNN
-F 3 "~" H 10100 2600 50  0001 C CNN
-	1    10100 2600
+P 10100 2900
+F 0 "J4" H 10180 2892 50  0000 L CNN
+F 1 "Screw_Terminal_01x02 - Battery IN" H 10180 2801 50  0000 L CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal" H 10100 2900 50  0001 C CNN
+F 3 "~" H 10100 2900 50  0001 C CNN
+	1    10100 2900
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 2600 0    50   Input ~ 0
+Text GLabel 9900 2900 0    50   Input ~ 0
 BAT-12V
-Text GLabel 9900 2700 0    50   Input ~ 0
+Text GLabel 9900 3000 0    50   Input ~ 0
 BAT-GND
 Text GLabel 1400 2600 0    50   Input ~ 0
 BAT-12V
@@ -963,7 +963,7 @@ Text GLabel 13450 2250 0    50   Input ~ 0
 VICTRON-IN-1
 Text GLabel 13450 2350 0    50   Input ~ 0
 VICTRON-IN-2
-Text GLabel 9900 2100 0    50   Input ~ 0
+Text GLabel 9900 2250 0    50   Input ~ 0
 THERMOCOUPLE-IN-P
 Text GLabel 6500 1000 0    50   Input ~ 0
 CHARGE-RELAY-STATUS
@@ -975,9 +975,9 @@ Wire Notes Line
 	5450 1900 8150 1900
 Wire Notes Line
 	5450 700  8150 700 
-Text GLabel 9900 1900 0    50   Input ~ 0
+Text GLabel 9900 1950 0    50   Input ~ 0
 CHARGE-RELAY-STATUS
-Text GLabel 9900 2000 0    50   Input ~ 0
+Text GLabel 9900 2050 0    50   Input ~ 0
 LOAD-RELAY-STATUS
 Wire Wire Line
 	6400 8000 6250 8000
@@ -985,7 +985,7 @@ Wire Wire Line
 	6250 7800 6350 7800
 Wire Wire Line
 	6800 7800 6750 7800
-Text GLabel 9900 2900 0    50   Input ~ 0
+Text GLabel 9900 2550 0    50   Input ~ 0
 SOC-ENABLE
 Text GLabel 1350 8400 0    50   Input ~ 0
 SOC-ENABLE
@@ -1022,30 +1022,6 @@ Wire Notes Line
 Text Notes 1650 9200 0    50   ~ 0
 SOC ON/OFF Bouton
 $Comp
-L Connector:Screw_Terminal_01x02 J5
-U 1 1 61D8E185
-P 10100 2900
-F 0 "J5" H 10180 2892 50  0000 L CNN
-F 1 "Screw_Terminal_01x02 - SOC Enable" H 10180 2801 50  0000 L CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal" H 10100 2900 50  0001 C CNN
-F 3 "~" H 10100 2900 50  0001 C CNN
-	1    10100 2900
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:+5V #PWR0137
-U 1 1 61D8F291
-P 9250 3000
-F 0 "#PWR0137" H 9250 2850 50  0001 C CNN
-F 1 "+5V" H 9265 3173 50  0000 C CNN
-F 2 "" H 9250 3000 50  0001 C CNN
-F 3 "" H 9250 3000 50  0001 C CNN
-	1    9250 3000
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9250 3000 9900 3000
-$Comp
 L Connector:Screw_Terminal_01x04 J6
 U 1 1 61DEB6EA
 P 10100 3300
@@ -1056,8 +1032,6 @@ F 3 "~" H 10100 3300 50  0001 C CNN
 	1    10100 3300
 	1    0    0    -1  
 $EndComp
-Text GLabel 9900 3200 0    50   Input ~ 0
-CELL-1
 Text GLabel 9900 3300 0    50   Input ~ 0
 CELL-2
 Text GLabel 9900 3400 0    50   Input ~ 0
@@ -1488,4 +1462,8 @@ Text Notes 1800 4250 0    50   ~ 0
 10.95V
 Text Notes 1800 4600 0    50   ~ 0
 14.6V
+Text GLabel 9900 3200 0    50   Input ~ 0
+CELL-1
+Text GLabel 9900 2450 0    50   Input ~ 0
+5V
 $EndSCHEMATC
