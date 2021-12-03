@@ -110,8 +110,8 @@ void BlueSeaLatchingRelay::startCycle() {
 
 /*
 * Getting relay state
-* comparaison with the logic pin and the analogic state from BlueSea
-* !! Relay value > 100 if relay open
+* comparaison with the logic pin and the digital state from BlueSea
+* !! Relay value = HIGH if relay open
 */
 byte BlueSeaLatchingRelay::getState() {
 	
