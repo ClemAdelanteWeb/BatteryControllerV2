@@ -223,9 +223,9 @@ Wire Notes Line
 	7200 7300 7200 8250
 Text Notes 6850 8200 0    50   ~ 0
 Buzzer\n
-Text Notes 11450 7850 0    50   ~ 0
+Text Notes 11350 8800 0    50   ~ 0
 LOAD relay\n
-Text Notes 11450 5650 0    50   ~ 0
+Text Notes 11350 6400 0    50   ~ 0
 CHARGE relay\n
 $Comp
 L Timer_RTC:DS1307+ U2
@@ -341,376 +341,57 @@ Wire Wire Line
 Text Notes 1750 8050 0    50   ~ 0
 Sonde T° batterie\n
 $Comp
-L Device:R R21
-U 1 1 61A6CA3B
-P 9350 5100
-F 0 "R21" V 9143 5100 50  0000 C CNN
-F 1 "47" V 9234 5100 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9280 5100 50  0001 C CNN
-F 3 "~" H 9350 5100 50  0001 C CNN
-	1    9350 5100
-	0    1    1    0   
-$EndComp
-$Comp
-L IRFZ44N:IRFZ44N Q3
-U 1 1 61A6CA60
-P 9800 5100
-F 0 "Q3" H 9962 5146 50  0000 L CNN
-F 1 "IRFZ44N" H 9962 5055 50  0000 L CNN
-F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9800 5100 50  0001 C CIN
-F 3 "https://www.infineon.com/dgdl/irf6617pbf.pdf?fileId=5546d462533600a4015355e853f21a17" H 9800 5100 50  0001 L CNN
-	1    9800 5100
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9800 5000 9800 4900
-$Comp
-L power:GND #PWR0105
-U 1 1 61A6CA67
-P 9800 5400
-F 0 "#PWR0105" H 9800 5150 50  0001 C CNN
-F 1 "GND" H 9805 5227 50  0000 C CNN
-F 2 "" H 9800 5400 50  0001 C CNN
-F 3 "" H 9800 5400 50  0001 C CNN
-	1    9800 5400
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R20
-U 1 1 61A6CA6D
-P 9350 4200
-F 0 "R20" V 9143 4200 50  0000 C CNN
-F 1 "47" V 9234 4200 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9280 4200 50  0001 C CNN
-F 3 "~" H 9350 4200 50  0001 C CNN
-F 4 "Limit gate current" V 9350 4200 50  0001 C CNN "Field4"
-	1    9350 4200
-	0    1    1    0   
-$EndComp
-$Comp
-L IRFZ44N:IRFZ44N Q2
-U 1 1 61A6CA73
-P 9800 4200
-F 0 "Q2" H 9962 4246 50  0000 L CNN
-F 1 "IRFZ44N" H 9962 4155 50  0000 L CNN
-F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9800 4200 50  0001 C CIN
-F 3 "https://www.infineon.com/dgdl/irf6617pbf.pdf?fileId=5546d462533600a4015355e853f21a17" H 9800 4200 50  0001 L CNN
-	1    9800 4200
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR0108
-U 1 1 61A6CA7A
-P 9800 4500
-F 0 "#PWR0108" H 9800 4250 50  0001 C CNN
-F 1 "GND" H 9805 4327 50  0000 C CNN
-F 2 "" H 9800 4500 50  0001 C CNN
-F 3 "" H 9800 4500 50  0001 C CNN
-	1    9800 4500
-	1    0    0    -1  
-$EndComp
-$Comp
-L Diode:1N5822 D7
-U 1 1 61AA61EF
-P 10650 5150
-F 0 "D7" V 10604 5230 50  0000 L CNN
-F 1 "1N5822" V 10695 5230 50  0000 L CNN
-F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10650 4975 50  0001 C CNN
-F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10650 5150 50  0001 C CNN
-	1    10650 5150
-	0    -1   -1   0   
-$EndComp
-Wire Notes Line
-	12000 3850 12000 5700
-Wire Notes Line
-	12000 5800 12000 7950
-$Comp
 L power:GND #PWR0110
 U 1 1 61B2F8D3
-P 9000 4500
-F 0 "#PWR0110" H 9000 4250 50  0001 C CNN
-F 1 "GND" H 9005 4327 50  0000 C CNN
-F 2 "" H 9000 4500 50  0001 C CNN
-F 3 "" H 9000 4500 50  0001 C CNN
-	1    9000 4500
+P 9300 5200
+F 0 "#PWR0110" H 9300 4950 50  0001 C CNN
+F 1 "GND" H 9305 5027 50  0000 C CNN
+F 2 "" H 9300 5200 50  0001 C CNN
+F 3 "" H 9300 5200 50  0001 C CNN
+	1    9300 5200
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R R16
 U 1 1 61B400D0
-P 9000 4350
-F 0 "R16" H 9070 4396 50  0000 L CNN
-F 1 "10K" H 9070 4305 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8930 4350 50  0001 C CNN
-F 3 "~" H 9000 4350 50  0001 C CNN
-F 4 "Pull down in case pin hi-impedence" H 9000 4350 50  0001 C CNN "Field4"
-	1    9000 4350
+P 9300 4600
+F 0 "R16" H 9370 4646 50  0000 L CNN
+F 1 "1K" H 9370 4555 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9230 4600 50  0001 C CNN
+F 3 "~" H 9300 4600 50  0001 C CNN
+F 4 "Pull down in case pin hi-impedence" H 9300 4600 50  0001 C CNN "Field4"
+	1    9300 4600
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	9000 4200 9200 4200
-Connection ~ 9800 4900
-$Comp
-L power:GND #PWR0111
-U 1 1 61B46D42
-P 9000 5400
-F 0 "#PWR0111" H 9000 5150 50  0001 C CNN
-F 1 "GND" H 9005 5227 50  0000 C CNN
-F 2 "" H 9000 5400 50  0001 C CNN
-F 3 "" H 9000 5400 50  0001 C CNN
-	1    9000 5400
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R17
-U 1 1 61B46D4A
-P 9000 5250
-F 0 "R17" H 9070 5296 50  0000 L CNN
-F 1 "10K" H 9070 5205 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8930 5250 50  0001 C CNN
-F 3 "~" H 9000 5250 50  0001 C CNN
-	1    9000 5250
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9800 5300 9800 5400
 $Comp
 L Diode:1N5822 D6
 U 1 1 61AA4E76
-P 10650 4250
-F 0 "D6" V 10604 4330 50  0000 L CNN
-F 1 "1N5822" V 10695 4330 50  0000 L CNN
-F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10650 4075 50  0001 C CNN
-F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10650 4250 50  0001 C CNN
-	1    10650 4250
+P 10700 4800
+F 0 "D6" V 10654 4880 50  0000 L CNN
+F 1 "1N5822" V 10745 4880 50  0000 L CNN
+F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 4625 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 4800 50  0001 C CNN
+	1    10700 4800
 	0    -1   -1   0   
 $EndComp
-Wire Wire Line
-	9800 4400 9800 4500
-$Comp
-L Device:R R23
-U 1 1 61BEF252
-P 9400 7250
-F 0 "R23" V 9193 7250 50  0000 C CNN
-F 1 "47" V 9284 7250 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9330 7250 50  0001 C CNN
-F 3 "~" H 9400 7250 50  0001 C CNN
-	1    9400 7250
-	0    1    1    0   
-$EndComp
-$Comp
-L IRFZ44N:IRFZ44N Q5
-U 1 1 61BEF258
-P 9850 7250
-F 0 "Q5" H 10012 7296 50  0000 L CNN
-F 1 "IRFZ44N" H 10012 7205 50  0000 L CNN
-F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9850 7250 50  0001 C CIN
-F 3 "https://www.infineon.com/dgdl/irf6617pbf.pdf?fileId=5546d462533600a4015355e853f21a17" H 9850 7250 50  0001 L CNN
-	1    9850 7250
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9850 7150 9850 7050
-$Comp
-L power:GND #PWR0113
-U 1 1 61BEF25F
-P 9850 7550
-F 0 "#PWR0113" H 9850 7300 50  0001 C CNN
-F 1 "GND" H 9855 7377 50  0000 C CNN
-F 2 "" H 9850 7550 50  0001 C CNN
-F 3 "" H 9850 7550 50  0001 C CNN
-	1    9850 7550
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R22
-U 1 1 61BEF266
-P 9400 6350
-F 0 "R22" V 9193 6350 50  0000 C CNN
-F 1 "47" V 9284 6350 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9330 6350 50  0001 C CNN
-F 3 "~" H 9400 6350 50  0001 C CNN
-F 4 "Limit gate current" V 9400 6350 50  0001 C CNN "Field4"
-	1    9400 6350
-	0    1    1    0   
-$EndComp
-$Comp
-L IRFZ44N:IRFZ44N Q4
-U 1 1 61BEF26C
-P 9850 6350
-F 0 "Q4" H 10012 6396 50  0000 L CNN
-F 1 "IRFZ44N" H 10012 6305 50  0000 L CNN
-F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9850 6350 50  0001 C CIN
-F 3 "https://www.infineon.com/dgdl/irf6617pbf.pdf?fileId=5546d462533600a4015355e853f21a17" H 9850 6350 50  0001 L CNN
-	1    9850 6350
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR0114
-U 1 1 61BEF272
-P 9850 6650
-F 0 "#PWR0114" H 9850 6400 50  0001 C CNN
-F 1 "GND" H 9855 6477 50  0000 C CNN
-F 2 "" H 9850 6650 50  0001 C CNN
-F 3 "" H 9850 6650 50  0001 C CNN
-	1    9850 6650
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9850 7050 10700 7050
-$Comp
-L Diode:1N5822 D9
-U 1 1 61BEF27A
-P 10700 7350
-F 0 "D9" V 10654 7430 50  0000 L CNN
-F 1 "1N5822" V 10745 7430 50  0000 L CNN
-F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 7175 50  0001 C CNN
-F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 7350 50  0001 C CNN
-	1    10700 7350
-	0    -1   -1   0   
-$EndComp
-Wire Wire Line
-	10700 7200 10700 7050
-$Comp
-L power:GND #PWR0116
-U 1 1 61BEF287
-P 9050 6650
-F 0 "#PWR0116" H 9050 6400 50  0001 C CNN
-F 1 "GND" H 9055 6477 50  0000 C CNN
-F 2 "" H 9050 6650 50  0001 C CNN
-F 3 "" H 9050 6650 50  0001 C CNN
-	1    9050 6650
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R18
-U 1 1 61BEF28E
-P 9050 6500
-F 0 "R18" H 9120 6546 50  0000 L CNN
-F 1 "10K" H 9120 6455 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8980 6500 50  0001 C CNN
-F 3 "~" H 9050 6500 50  0001 C CNN
-F 4 "Pull down in case pin hi-impedence" H 9050 6500 50  0001 C CNN "Field4"
-	1    9050 6500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9050 6350 9250 6350
-Connection ~ 9850 7050
-$Comp
-L power:GND #PWR0117
-U 1 1 61BEF298
-P 9050 7550
-F 0 "#PWR0117" H 9050 7300 50  0001 C CNN
-F 1 "GND" H 9055 7377 50  0000 C CNN
-F 2 "" H 9050 7550 50  0001 C CNN
-F 3 "" H 9050 7550 50  0001 C CNN
-	1    9050 7550
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R19
-U 1 1 61BEF29E
-P 9050 7400
-F 0 "R19" H 9120 7446 50  0000 L CNN
-F 1 "10K" H 9120 7355 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8980 7400 50  0001 C CNN
-F 3 "~" H 9050 7400 50  0001 C CNN
-	1    9050 7400
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9850 7450 9850 7550
-$Comp
-L Diode:1N5822 D8
-U 1 1 61BEF2AC
-P 10700 6400
-F 0 "D8" V 10654 6480 50  0000 L CNN
-F 1 "1N5822" V 10745 6480 50  0000 L CNN
-F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 6225 50  0001 C CNN
-F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 6400 50  0001 C CNN
-	1    10700 6400
-	0    -1   -1   0   
-$EndComp
-Connection ~ 10700 7050
-Wire Wire Line
-	10700 7050 11100 7050
-Wire Wire Line
-	9850 6550 9850 6650
-Wire Wire Line
-	9050 6350 8950 6350
-Connection ~ 9050 6350
-Text GLabel 8950 6350 0    50   Input ~ 0
-D4
 Text GLabel 6200 4000 0    50   Input ~ 0
 D3
 Text GLabel 6200 4100 0    50   Input ~ 0
 D4
-Text GLabel 8950 7250 0    50   Input ~ 0
-D5
-Wire Wire Line
-	8950 7250 9050 7250
-Connection ~ 9050 7250
-Wire Wire Line
-	9050 7250 9250 7250
 Text GLabel 7200 4300 2    50   Input ~ 0
 A0
 Text GLabel 6200 3900 0    50   Input ~ 0
 D2
-Text GLabel 8900 5100 0    50   Input ~ 0
-A2
-Text GLabel 8900 4200 0    50   Input ~ 0
+Text GLabel 8700 5000 0    50   Input ~ 0
 A1
-Wire Wire Line
-	8900 4200 9000 4200
-Connection ~ 9000 4200
-Wire Wire Line
-	8900 5100 9000 5100
-Connection ~ 9000 5100
-Wire Wire Line
-	9000 5100 9200 5100
 Wire Notes Line
-	8550 3850 8550 5700
-Wire Notes Line
-	8550 5700 12000 5700
-Wire Notes Line
-	8550 3850 12000 3850
-Wire Notes Line
-	8550 5800 8550 7950
-Wire Notes Line
-	8550 5800 12000 5800
-Wire Notes Line
-	8550 7950 12000 7950
+	8450 8900 11900 8900
 Text GLabel 7200 5000 2    50   Input ~ 0
 A7
-Text GLabel 7700 1000 2    50   Input ~ 0
-A6
-Text GLabel 7050 1100 2    50   Input ~ 0
+Text GLabel 6900 1150 3    50   Input ~ 0
 A7
 Text Notes 7100 1800 0    50   ~ 0
 A6 : Charge relay status\nA7 : Load relay status
-$Comp
-L Device:R R13
-U 1 1 61C478EB
-P 6850 1250
-F 0 "R13" H 6920 1296 50  0000 L CNN
-F 1 "4.7K" H 6920 1205 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 6780 1250 50  0001 C CNN
-F 3 "~" H 6850 1250 50  0001 C CNN
-	1    6850 1250
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R15
-U 1 1 61C48B62
-P 7600 1150
-F 0 "R15" H 7670 1196 50  0000 L CNN
-F 1 "4.7K" H 7670 1105 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 7530 1150 50  0001 C CNN
-F 3 "~" H 7600 1150 50  0001 C CNN
-	1    7600 1150
-	1    0    0    -1  
-$EndComp
 $Comp
 L Device:R R14
 U 1 1 61C498FA
@@ -722,53 +403,8 @@ F 3 "~" H 7350 1000 50  0001 C CNN
 	1    7350 1000
 	0    1    1    0   
 $EndComp
-$Comp
-L Device:R R12
-U 1 1 61C4A9D2
-P 6650 1100
-F 0 "R12" V 6443 1100 50  0000 C CNN
-F 1 "10K" V 6534 1100 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 6580 1100 50  0001 C CNN
-F 3 "~" H 6650 1100 50  0001 C CNN
-	1    6650 1100
-	0    1    1    0   
-$EndComp
 Wire Wire Line
-	6400 1100 6500 1100
-Wire Wire Line
-	7050 1100 6850 1100
-Connection ~ 6850 1100
-Wire Wire Line
-	6850 1100 6800 1100
-Wire Wire Line
-	7500 1000 7600 1000
-Connection ~ 7600 1000
-Wire Wire Line
-	7600 1000 7700 1000
-Wire Wire Line
-	7200 1000 6500 1000
-$Comp
-L power:GND #PWR0119
-U 1 1 61C7DE32
-P 6850 1400
-F 0 "#PWR0119" H 6850 1150 50  0001 C CNN
-F 1 "GND" H 6855 1227 50  0000 C CNN
-F 2 "" H 6850 1400 50  0001 C CNN
-F 3 "" H 6850 1400 50  0001 C CNN
-	1    6850 1400
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR0120
-U 1 1 61C7E1C8
-P 7600 1300
-F 0 "#PWR0120" H 7600 1050 50  0001 C CNN
-F 1 "GND" H 7605 1127 50  0000 C CNN
-F 2 "" H 7600 1300 50  0001 C CNN
-F 3 "" H 7600 1300 50  0001 C CNN
-	1    7600 1300
-	1    0    0    -1  
-$EndComp
+	7200 1000 6900 1000
 Wire Notes Line
 	8150 700  8150 1900
 Text GLabel 6200 4200 0    50   Input ~ 0
@@ -807,21 +443,21 @@ Text GLabel 9900 1450 0    50   Input ~ 0
 VICTRON-IN-1
 Text GLabel 9900 1550 0    50   Input ~ 0
 VICTRON-IN-2
-Text GLabel 11100 4000 2    50   Input ~ 0
+Text GLabel 10950 7550 2    50   Input ~ 0
 CHARGE-RELAY-ON
-Text GLabel 11100 4900 2    50   Input ~ 0
+Text GLabel 10950 8600 2    50   Input ~ 0
 CHARGE-RELAY-OFF
-Text GLabel 11100 6150 2    50   Input ~ 0
+Text GLabel 10950 5150 2    50   Input ~ 0
 LOAD-RELAY-ON
-Text GLabel 11100 7050 2    50   Input ~ 0
-LOAD-RELAY-OFF
-Text GLabel 9900 800  0    50   Input ~ 0
-LOAD-RELAY-ON
-Text GLabel 9900 900  0    50   Input ~ 0
+Text GLabel 10950 6200 2    50   Input ~ 0
 LOAD-RELAY-OFF
 Text GLabel 9900 1000 0    50   Input ~ 0
-CHARGE-RELAY-ON
+LOAD-RELAY-ON
 Text GLabel 9900 1100 0    50   Input ~ 0
+LOAD-RELAY-OFF
+Text GLabel 9900 800  0    50   Input ~ 0
+CHARGE-RELAY-ON
+Text GLabel 9900 900  0    50   Input ~ 0
 CHARGE-RELAY-OFF
 $Comp
 L Interface_UART:SN75176AP U4
@@ -1267,7 +903,7 @@ Text GLabel 14000 2250 2    50   Input ~ 0
 D8
 Text GLabel 14000 2350 2    50   Input ~ 0
 D9
-Text GLabel 12600 4300 0    50   Input ~ 0
+Text GLabel 12500 5250 0    50   Input ~ 0
 BAT-12V
 Text GLabel 13350 4700 3    50   Input ~ 0
 BAT-GND
@@ -1354,47 +990,8 @@ Text GLabel 1850 5550 0    50   Input ~ 0
 UP-3.3V
 Text GLabel 4900 3400 2    50   Input ~ 0
 UP-5V
-Text GLabel 11100 6650 2    50   Input ~ 0
+Text GLabel 10950 4450 2    50   Input ~ 0
 BAT-12V
-Wire Wire Line
-	10700 6550 10700 6650
-Wire Wire Line
-	10700 6650 11100 6650
-Wire Wire Line
-	9850 6150 10700 6150
-Wire Wire Line
-	10700 6250 10700 6150
-Connection ~ 10700 6150
-Wire Wire Line
-	10700 6150 11100 6150
-Text GLabel 11100 7500 2    50   Input ~ 0
-BAT-12V
-Wire Wire Line
-	10700 7500 11100 7500
-Wire Wire Line
-	9800 4900 10650 4900
-Wire Wire Line
-	9800 4000 10650 4000
-Text GLabel 11100 5300 2    50   Input ~ 0
-BAT-12V
-Text GLabel 11100 4450 2    50   Input ~ 0
-BAT-12V
-Wire Wire Line
-	10650 5000 10650 4900
-Connection ~ 10650 4900
-Wire Wire Line
-	10650 4900 11100 4900
-Wire Wire Line
-	10650 5300 11100 5300
-Wire Wire Line
-	10650 4100 10650 4000
-Connection ~ 10650 4000
-Wire Wire Line
-	10650 4000 11100 4000
-Wire Wire Line
-	10650 4400 10650 4450
-Wire Wire Line
-	10650 4450 11100 4450
 Wire Wire Line
 	12900 4300 13050 4300
 $Comp
@@ -1408,10 +1005,10 @@ F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 12750 4300 50  0001 C CNN
 	1    12750 4300
 	-1   0    0    1   
 $EndComp
-Text Notes 11350 7900 0    50   ~ 0
+Text Notes 11250 8850 0    50   ~ 0
 Low side relay
-Text Notes 11400 5700 0    50   ~ 0
-Low side relay
+Text Notes 11300 6450 0    50   ~ 0
+HIGH side relay
 Wire Wire Line
 	3100 4550 3700 4550
 Wire Wire Line
@@ -1468,4 +1065,447 @@ Wire Notes Line
 	750  7050 2700 7050
 Wire Notes Line
 	750  8100 2700 8100
+Wire Wire Line
+	7500 1000 7700 1000
+Text GLabel 6900 950  1    50   Input ~ 0
+A6
+Text GLabel 7700 1000 2    50   Input ~ 0
+5V
+$Comp
+L Device:R R9
+U 1 1 61ADEF58
+P 7350 1100
+F 0 "R9" V 7143 1100 50  0000 C CNN
+F 1 "10K" V 7234 1100 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 7280 1100 50  0001 C CNN
+F 3 "~" H 7350 1100 50  0001 C CNN
+	1    7350 1100
+	0    1    1    0   
+$EndComp
+Text GLabel 7700 1100 2    50   Input ~ 0
+5V
+Wire Wire Line
+	7700 1100 7500 1100
+Wire Wire Line
+	6400 1100 6900 1100
+Wire Wire Line
+	6900 1150 6900 1100
+Connection ~ 6900 1100
+Wire Wire Line
+	6900 1100 7200 1100
+Wire Wire Line
+	6900 950  6900 1000
+Connection ~ 6900 1000
+Wire Wire Line
+	6900 1000 6500 1000
+$Comp
+L Transistor_BJT:TIP42C Q6
+U 1 1 61B22AA6
+P 9900 4800
+F 0 "Q6" H 10091 4846 50  0000 L CNN
+F 1 "TIP42C" H 10091 4755 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 10150 4725 50  0001 L CIN
+F 3 "https://www.centralsemi.com/get_document.php?cmp=1&mergetype=pd&mergepath=pd&pdf_id=TIP42.PDF" H 9900 4800 50  0001 L CNN
+	1    9900 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Transistor_BJT:TIP122 Q2
+U 1 1 61B38CF1
+P 9200 5000
+F 0 "Q2" H 9407 5046 50  0000 L CNN
+F 1 "TIP122" H 9407 4955 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9400 4925 50  0001 L CIN
+F 3 "https://www.onsemi.com/pub/Collateral/TIP120-D.PDF" H 9200 5000 50  0001 L CNN
+	1    9200 5000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 4750 9300 4800
+Connection ~ 9300 4800
+Wire Wire Line
+	9300 4450 10000 4450
+Wire Wire Line
+	10950 5150 10700 5150
+Wire Wire Line
+	10700 5150 10700 4950
+Wire Wire Line
+	10700 4650 10700 4450
+Wire Wire Line
+	10000 4600 10000 4450
+Connection ~ 10000 4450
+Wire Wire Line
+	10000 4450 10700 4450
+Wire Wire Line
+	10000 5000 10000 5150
+Wire Wire Line
+	10000 5150 10700 5150
+Connection ~ 10700 5150
+Wire Wire Line
+	10950 4450 10700 4450
+Connection ~ 10700 4450
+$Comp
+L Device:R R12
+U 1 1 61BD3D2C
+P 8850 6050
+F 0 "R12" V 8643 6050 50  0000 C CNN
+F 1 "1K" V 8734 6050 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8780 6050 50  0001 C CNN
+F 3 "~" H 8850 6050 50  0001 C CNN
+F 4 "Limit gate current" V 8850 6050 50  0001 C CNN "Field4"
+	1    8850 6050
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0104
+U 1 1 61BD3D32
+P 9300 6250
+F 0 "#PWR0104" H 9300 6000 50  0001 C CNN
+F 1 "GND" H 9305 6077 50  0000 C CNN
+F 2 "" H 9300 6250 50  0001 C CNN
+F 3 "" H 9300 6250 50  0001 C CNN
+	1    9300 6250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R17
+U 1 1 61BD3D39
+P 9300 5650
+F 0 "R17" H 9370 5696 50  0000 L CNN
+F 1 "1K" H 9370 5605 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9230 5650 50  0001 C CNN
+F 3 "~" H 9300 5650 50  0001 C CNN
+F 4 "Pull down in case pin hi-impedence" H 9300 5650 50  0001 C CNN "Field4"
+	1    9300 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Diode:1N5822 D2
+U 1 1 61BD3D3F
+P 10700 5850
+F 0 "D2" V 10654 5930 50  0000 L CNN
+F 1 "1N5822" V 10745 5930 50  0000 L CNN
+F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 5675 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 5850 50  0001 C CNN
+	1    10700 5850
+	0    -1   -1   0   
+$EndComp
+Text GLabel 8700 6050 0    50   Input ~ 0
+A2
+Text GLabel 10950 5500 2    50   Input ~ 0
+BAT-12V
+$Comp
+L Transistor_BJT:TIP42C Q7
+U 1 1 61BD3D48
+P 9900 5850
+F 0 "Q7" H 10091 5896 50  0000 L CNN
+F 1 "TIP42C" H 10091 5805 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 10150 5775 50  0001 L CIN
+F 3 "https://www.centralsemi.com/get_document.php?cmp=1&mergetype=pd&mergepath=pd&pdf_id=TIP42.PDF" H 9900 5850 50  0001 L CNN
+	1    9900 5850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Transistor_BJT:TIP122 Q3
+U 1 1 61BD3D4E
+P 9200 6050
+F 0 "Q3" H 9407 6096 50  0000 L CNN
+F 1 "TIP122" H 9407 6005 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9400 5975 50  0001 L CIN
+F 3 "https://www.onsemi.com/pub/Collateral/TIP120-D.PDF" H 9200 6050 50  0001 L CNN
+	1    9200 6050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 5800 9300 5850
+Connection ~ 9300 5850
+Wire Wire Line
+	9300 5500 10000 5500
+Wire Wire Line
+	10950 6200 10700 6200
+Wire Wire Line
+	10700 6200 10700 6000
+Wire Wire Line
+	10700 5700 10700 5500
+Wire Wire Line
+	10000 5650 10000 5500
+Connection ~ 10000 5500
+Wire Wire Line
+	10000 5500 10700 5500
+Wire Wire Line
+	10000 6050 10000 6200
+Wire Wire Line
+	10000 6200 10700 6200
+Connection ~ 10700 6200
+Wire Wire Line
+	10950 5500 10700 5500
+Connection ~ 10700 5500
+$Comp
+L Device:R R20
+U 1 1 61A6CA6D
+P 8850 5000
+F 0 "R20" V 8643 5000 50  0000 C CNN
+F 1 "1K" V 8734 5000 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8780 5000 50  0001 C CNN
+F 3 "~" H 8850 5000 50  0001 C CNN
+F 4 "Limit gate current" V 8850 5000 50  0001 C CNN "Field4"
+	1    8850 5000
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0105
+U 1 1 61C0D74A
+P 9300 7600
+F 0 "#PWR0105" H 9300 7350 50  0001 C CNN
+F 1 "GND" H 9305 7427 50  0000 C CNN
+F 2 "" H 9300 7600 50  0001 C CNN
+F 3 "" H 9300 7600 50  0001 C CNN
+	1    9300 7600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R18
+U 1 1 61C0D751
+P 9300 7000
+F 0 "R18" H 9370 7046 50  0000 L CNN
+F 1 "1K" H 9370 6955 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9230 7000 50  0001 C CNN
+F 3 "~" H 9300 7000 50  0001 C CNN
+F 4 "Pull down in case pin hi-impedence" H 9300 7000 50  0001 C CNN "Field4"
+	1    9300 7000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Diode:1N5822 D3
+U 1 1 61C0D757
+P 10700 7200
+F 0 "D3" V 10654 7280 50  0000 L CNN
+F 1 "1N5822" V 10745 7280 50  0000 L CNN
+F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 7025 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 7200 50  0001 C CNN
+	1    10700 7200
+	0    -1   -1   0   
+$EndComp
+Text GLabel 8700 7400 0    50   Input ~ 0
+D4
+Text GLabel 10950 6850 2    50   Input ~ 0
+BAT-12V
+$Comp
+L Transistor_BJT:TIP42C Q8
+U 1 1 61C0D761
+P 9900 7200
+F 0 "Q8" H 10091 7246 50  0000 L CNN
+F 1 "TIP42C" H 10091 7155 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 10150 7125 50  0001 L CIN
+F 3 "https://www.centralsemi.com/get_document.php?cmp=1&mergetype=pd&mergepath=pd&pdf_id=TIP42.PDF" H 9900 7200 50  0001 L CNN
+	1    9900 7200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Transistor_BJT:TIP122 Q4
+U 1 1 61C0D767
+P 9200 7400
+F 0 "Q4" H 9407 7446 50  0000 L CNN
+F 1 "TIP122" H 9407 7355 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9400 7325 50  0001 L CIN
+F 3 "https://www.onsemi.com/pub/Collateral/TIP120-D.PDF" H 9200 7400 50  0001 L CNN
+	1    9200 7400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 7150 9300 7200
+Connection ~ 9300 7200
+Wire Wire Line
+	9300 6850 10000 6850
+Wire Wire Line
+	10950 7550 10700 7550
+Wire Wire Line
+	10700 7550 10700 7350
+Wire Wire Line
+	10700 7050 10700 6850
+Wire Wire Line
+	10000 7000 10000 6850
+Connection ~ 10000 6850
+Wire Wire Line
+	10000 6850 10700 6850
+Wire Wire Line
+	10000 7400 10000 7550
+Wire Wire Line
+	10000 7550 10700 7550
+Connection ~ 10700 7550
+Wire Wire Line
+	10950 6850 10700 6850
+Connection ~ 10700 6850
+$Comp
+L Device:R R15
+U 1 1 61C0D77D
+P 8850 8450
+F 0 "R15" V 8643 8450 50  0000 C CNN
+F 1 "1K" V 8734 8450 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8780 8450 50  0001 C CNN
+F 3 "~" H 8850 8450 50  0001 C CNN
+F 4 "Limit gate current" V 8850 8450 50  0001 C CNN "Field4"
+	1    8850 8450
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0107
+U 1 1 61C0D783
+P 9300 8650
+F 0 "#PWR0107" H 9300 8400 50  0001 C CNN
+F 1 "GND" H 9305 8477 50  0000 C CNN
+F 2 "" H 9300 8650 50  0001 C CNN
+F 3 "" H 9300 8650 50  0001 C CNN
+	1    9300 8650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R19
+U 1 1 61C0D78A
+P 9300 8050
+F 0 "R19" H 9370 8096 50  0000 L CNN
+F 1 "1K" H 9370 8005 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9230 8050 50  0001 C CNN
+F 3 "~" H 9300 8050 50  0001 C CNN
+F 4 "Pull down in case pin hi-impedence" H 9300 8050 50  0001 C CNN "Field4"
+	1    9300 8050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Diode:1N5822 D4
+U 1 1 61C0D790
+P 10700 8250
+F 0 "D4" V 10654 8330 50  0000 L CNN
+F 1 "1N5822" V 10745 8330 50  0000 L CNN
+F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 8075 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 8250 50  0001 C CNN
+	1    10700 8250
+	0    -1   -1   0   
+$EndComp
+Text GLabel 8700 8450 0    50   Input ~ 0
+D5
+Text GLabel 10950 7900 2    50   Input ~ 0
+BAT-12V
+$Comp
+L Transistor_BJT:TIP42C Q9
+U 1 1 61C0D798
+P 9900 8250
+F 0 "Q9" H 10091 8296 50  0000 L CNN
+F 1 "TIP42C" H 10091 8205 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 10150 8175 50  0001 L CIN
+F 3 "https://www.centralsemi.com/get_document.php?cmp=1&mergetype=pd&mergepath=pd&pdf_id=TIP42.PDF" H 9900 8250 50  0001 L CNN
+	1    9900 8250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Transistor_BJT:TIP122 Q5
+U 1 1 61C0D79E
+P 9200 8450
+F 0 "Q5" H 9407 8496 50  0000 L CNN
+F 1 "TIP122" H 9407 8405 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 9400 8375 50  0001 L CIN
+F 3 "https://www.onsemi.com/pub/Collateral/TIP120-D.PDF" H 9200 8450 50  0001 L CNN
+	1    9200 8450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 8200 9300 8250
+Connection ~ 9300 8250
+Wire Wire Line
+	9300 7900 10000 7900
+Wire Wire Line
+	10950 8600 10700 8600
+Wire Wire Line
+	10700 8600 10700 8400
+Wire Wire Line
+	10700 8100 10700 7900
+Wire Wire Line
+	10000 8050 10000 7900
+Connection ~ 10000 7900
+Wire Wire Line
+	10000 7900 10700 7900
+Wire Wire Line
+	10000 8450 10000 8600
+Wire Wire Line
+	10000 8600 10700 8600
+Connection ~ 10700 8600
+Wire Wire Line
+	10950 7900 10700 7900
+Connection ~ 10700 7900
+$Comp
+L Device:R R13
+U 1 1 61C0D7B4
+P 8850 7400
+F 0 "R13" V 8643 7400 50  0000 C CNN
+F 1 "1K" V 8734 7400 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8780 7400 50  0001 C CNN
+F 3 "~" H 8850 7400 50  0001 C CNN
+F 4 "Limit gate current" V 8850 7400 50  0001 C CNN "Field4"
+	1    8850 7400
+	0    1    1    0   
+$EndComp
+Wire Notes Line
+	11900 6550 8450 6550
+Wire Notes Line
+	8450 4100 11900 4100
+Wire Notes Line
+	8450 4100 8450 8900
+Wire Notes Line
+	11900 4100 11900 8900
+$Comp
+L Device:R R22
+U 1 1 61CE2F3C
+P 9550 5850
+F 0 "R22" V 9343 5850 50  0000 C CNN
+F 1 "1K" V 9434 5850 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9480 5850 50  0001 C CNN
+F 3 "~" H 9550 5850 50  0001 C CNN
+F 4 "Limit gate current" V 9550 5850 50  0001 C CNN "Field4"
+	1    9550 5850
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9400 5850 9300 5850
+$Comp
+L Device:R R21
+U 1 1 61CE31E1
+P 9550 4800
+F 0 "R21" V 9343 4800 50  0000 C CNN
+F 1 "1K" V 9434 4800 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9480 4800 50  0001 C CNN
+F 3 "~" H 9550 4800 50  0001 C CNN
+F 4 "Limit gate current" V 9550 4800 50  0001 C CNN "Field4"
+	1    9550 4800
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9400 4800 9300 4800
+$Comp
+L Device:R R23
+U 1 1 61CE360E
+P 9550 7200
+F 0 "R23" V 9343 7200 50  0000 C CNN
+F 1 "1K" V 9434 7200 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9480 7200 50  0001 C CNN
+F 3 "~" H 9550 7200 50  0001 C CNN
+F 4 "Limit gate current" V 9550 7200 50  0001 C CNN "Field4"
+	1    9550 7200
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9400 7200 9300 7200
+$Comp
+L Device:R R24
+U 1 1 61CE3AED
+P 9550 8250
+F 0 "R24" V 9343 8250 50  0000 C CNN
+F 1 "1K" V 9434 8250 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 9480 8250 50  0001 C CNN
+F 3 "~" H 9550 8250 50  0001 C CNN
+F 4 "Limit gate current" V 9550 8250 50  0001 C CNN "Field4"
+	1    9550 8250
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9400 8250 9300 8250
 $EndSCHEMATC
