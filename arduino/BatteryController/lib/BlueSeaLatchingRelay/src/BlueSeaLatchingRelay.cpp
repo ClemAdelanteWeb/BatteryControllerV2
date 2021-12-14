@@ -6,7 +6,7 @@
 
 #include "BlueSeaLatchingRelay.h"
 
-#define DEBUGR 1
+#define DEBUGR 0
 
 /**
  * Constructor

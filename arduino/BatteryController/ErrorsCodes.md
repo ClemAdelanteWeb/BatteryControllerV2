@@ -1,5 +1,5 @@
 #1 SOC min reached : now / min 
-    values : SOC actual, SOC Min param
+    values : SOC actual/ SOC Min param
 #2 High Voltage detected
     values : Voltage
 #3 High voltage detected, Force Opening Charge Relay 
