@@ -372,7 +372,7 @@ F 1 "1N5822" V 10745 4880 50  0000 L CNN
 F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 4625 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 4800 50  0001 C CNN
 	1    10700 4800
-	0    -1   -1   0   
+	0    1    1    0   
 $EndComp
 Text GLabel 6200 4000 0    50   Input ~ 0
 D3
@@ -1188,7 +1188,7 @@ F 1 "1N5822" V 10745 5930 50  0000 L CNN
 F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 5675 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 5850 50  0001 C CNN
 	1    10700 5850
-	0    -1   -1   0   
+	0    1    1    0   
 $EndComp
 Text GLabel 8700 6050 0    50   Input ~ 0
 A2
@@ -1284,7 +1284,7 @@ F 1 "1N5822" V 10745 7280 50  0000 L CNN
 F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 7025 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 7200 50  0001 C CNN
 	1    10700 7200
-	0    -1   -1   0   
+	0    1    1    0   
 $EndComp
 Text GLabel 8700 7400 0    50   Input ~ 0
 D4
@@ -1380,7 +1380,7 @@ F 1 "1N5822" V 10745 8330 50  0000 L CNN
 F 2 "Diode_THT:D_5W_P5.08mm_Vertical_AnodeUp" H 10700 8075 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/88526/1n5820.pdf" H 10700 8250 50  0001 C CNN
 	1    10700 8250
-	0    -1   -1   0   
+	0    1    1    0   
 $EndComp
 Text GLabel 8700 8450 0    50   Input ~ 0
 D5

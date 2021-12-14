@@ -1,0 +1,21 @@
+{
+  "name": "BlueSea Latching Relay",
+  "version": "1.0.0",
+  "description": "Using BlueSea Latching relays with Arduino",
+  "keywords": "BlueSea, Relay, latching, status relay",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/username/hello-world.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Clément Lambert",
+      "email": "duclik@gmail.com",
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*"
+}
