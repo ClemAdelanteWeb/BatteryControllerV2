@@ -6,7 +6,7 @@
 #include "Thread.h"
 #include "BlueSeaLatchingRelay.h"
 #include "ADS1X15.h"
-// #include "SD.h"
+#include "SD.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
 #define IS_RTC 0
@@ -109,7 +109,7 @@ RTC_DS1307 rtc;
 #endif
 
 const byte SDCardPinSelect = 10;
-const String DataLogFile = "log.txt";
+const char* DataLogFile = "LOG.TXT";
 
 //------
 // Temperature sensor settings
@@ -214,7 +214,7 @@ const char *TxtSpacer = " ";
 int i;
 
 void logData(String message, byte buzz, int buzzperiode = 100);
-void logDataMessNum(char num, String values = "", byte buzz = 0, int buzzperiode = 100);
+void logDataMessNum(int num, String values = "", byte buzz = 0, int buzzperiode = 100);
 String getDateTime();
 void printStatus();
 int getMaxCellVoltageDifference();
@@ -264,10 +264,10 @@ void setup()
   ADS.readADC(0);     // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 
   // Initialisation Carte SD
-  //  if (!SD.begin(SDCardPinSelect)) {
-  //     Serial.println(F("sdcard wait"));
-  //    while (1);
-  //  }
+   if (!SD.begin(SDCardPinSelect)) {
+      Serial.println(F("sdcard wait"));
+     while (1);
+   }
 
 #if IS_RTC
   if (!rtc.begin())
@@ -284,7 +284,7 @@ void setup()
   }
 #endif
 
-  // Serial.println(F("END STP"));
+   Serial.println(F("END STP"));
 }
 
 // Enregistrement de toutes les tensions des cellules
@@ -453,18 +453,18 @@ boolean isSOCValid()
 
 void readSDCard()
 {
-  //  File dataFile = SD.open(DataLogFile);
-  //
-  //  // if the file is available, write to it:
-  //  if (dataFile) {
-  //    while (dataFile.available()) {
-  //      Serial.write(dataFile.read());
-  //    }
-  //
-  //    dataFile.close();
-  //  } else {
-  //    // Serial.println("No SD card File");
-  //  }
+   File dataFile = SD.open(DataLogFile);
+  
+   // if the file is available, write to it:
+   if (dataFile) {
+     while (dataFile.available()) {
+       Serial.write(dataFile.read());
+     }
+  
+     dataFile.close();
+   } else {
+     // Serial.println("No SD card File");
+   }
 }
 
 // Return battery temperature
@@ -505,13 +505,15 @@ int getBatteryTemperature()
   return degrees;
 }
 
-void logDataMessNum(char num, String values, byte buzz, int buzzperiode)
+void logDataMessNum(int num, String values, byte buzz, int buzzperiode)
 {
-  MessageTemp = F("#");
-  MessageTemp += num;
-  MessageTemp += (";");
-  MessageTemp += values;
-  logData(MessageTemp, buzz, buzzperiode);
+  String MessageLog;
+  MessageLog = F("#");
+  MessageLog += (String) num;
+  MessageLog += F(";");
+  MessageLog += values;
+
+  logData(MessageLog, buzz, buzzperiode);
 }
 
 // Enregistre les messages sur la carte SD
@@ -520,35 +522,21 @@ void logData(String message, byte buzz, int buzzperiode)
   String messageDate = getDateTime() + F(" ") + message;
 
   // Open Datalog file on SD Card
-  //  File dataFile = SD.open(DataLogFile, FILE_WRITE);
-  //
-  //  // if the file is available, write to it:
-  //  if (dataFile) {
-  //    dataFile.println(messageDate);
-  //    dataFile.close();
-  //  }
-  //  else {
-  //    // Serial.println("error opening "+DataLogFile);
-  //    // bip(50);
-  //    //delay(200);
-  //    // bip(5000);
-  //  }
+   File dataFile = SD.open(DataLogFile, FILE_WRITE);
+  
+   // if the file is available, write to it:
+   if (dataFile) {
+     dataFile.println(messageDate);
+     dataFile.close();
+   }
+   else {
+      Serial.println("error opening "+(String)DataLogFile);
+     // bip(50);
+     //delay(200);
+     // bip(5000);
+   }
 
-  if (buzz == 3)
-  {
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //
-    //    Serial.print(F("ALARME : "));
-  }
-  else
-  {
-    //    Serial.print(F("ALERTE : "));
-  }
+
 
   Serial.println(message);
   //  Serial.println(F("-"));
@@ -1194,7 +1182,7 @@ void run()
     LoadRelay.forceToOpen();
 
     MessageTemp = (String)(BatteryVoltageUpdatedTime / 1000);
-    logDataMessNum(10, MessageTemp, 1, 3000);
+    logDataMessNum(10, MessageTemp, 1);
   }
 
   //---
@@ -1211,7 +1199,7 @@ void run()
 
       LoadRelay.forceToOpen();
       MessageTemp = (String)CellsDifferenceMax;
-      logDataMessNum(11, MessageTemp, 1, 5000);
+      logDataMessNum(11, MessageTemp, 1);
     }
     else
     {
