@@ -9,7 +9,7 @@
 #include "SD.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
-#define IS_RTC 0
+#define IS_RTC 1
 
 //------
 // SETTINGS
@@ -19,16 +19,16 @@
 const byte activateCheckingCellsVoltageDifference = 1;
 
 // Opening charge relay for SOC >= SOCMax
-const int SOCMax = 940;
+const int SOCMax = 1000;
 
 // Re-Close Charge Relay when SOCMaxReset is reached
-const int SOCMaxReset = 935;
+const int SOCMaxReset = 950;
 
 // Opening Load relay if SOC <= SOCmin
-const int SOCMin = 200;
+const int SOCMin = 180;
 
 // Re-Close Load Relay when SOCMinReset is reached
-const int SOCMinReset = 225;
+const int SOCMinReset = 200;
 
 // SOC Maximum time considerated valid
 // in mS
@@ -41,7 +41,7 @@ const int BatteryVoltageMax = 13800; // 13,8v = 3,45v / Cell
 const int BatteryVoltageMaxReset = 13360;
 
 // Minimum Voltage security
-const int BatteryVoltageMin = 12400; // 12,4v = 3,1v / Cell
+const int BatteryVoltageMin = 12000; // 12V = 3v / Cell
 
 // Waiting for Min Reset Voltage after reaching Min Voltage (time to re-charge the battery enough to use it)
 const int BatteryVoltageMinReset = 12800; // 12,9  = 3,225v / Cell
@@ -56,12 +56,12 @@ const int CellVoltageMax = 3600;
 // Absolute value (-100mV) = 100mV).
 // in mV
 // default 300
-const int CellsDifferenceMaxLimit = 300;
+const int CellsDifferenceMaxLimit = 500;
 
 // Voltage difference maximum to considere that the battery bank can be starting using again
 // in mV
 // default 250
-const int CellsDifferenceMaxReset = 250;
+const int CellsDifferenceMaxReset = 400;
 
 //------
 // PINS PARAMS
@@ -95,10 +95,11 @@ const int cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-    0.1780487,
-    0.2134769,
-    0.4977307,
-    0.5890515};
+  0.1780487,
+  0.2142193,
+  0.4980978,
+  0.5896120
+};
 
 // LOGGING Params
 #if IS_RTC
@@ -280,14 +281,14 @@ void setup()
     while (1)
       delay(10);
   }
-  if (!rtc.isrunning())
-  {
+  //if (!rtc.isrunning())
+  //{
     // Serial.println(F("RTC NOT running"));
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }
+  //}
 #endif
 
-   Serial.println(F("END STP"));
+   // Serial.println(F("END STP"));
 }
 
 // Enregistrement de toutes les tensions des cellules
@@ -522,14 +523,14 @@ void logDataMessNum(int num, String values, byte buzz, int buzzperiode)
 // Enregistre les messages sur la carte SD
 void logData(String message, byte buzz, int buzzperiode)
 {
-  //String messageDate = getDateTime() + F(" ") + message;
+  String messageDate = getDateTime() + F(" ") + message;
 
   // Open Datalog file on SD Card
     logFile = SD.open(DataLogFile, FILE_WRITE);
   
    // if the file is available, write to it:
    if (logFile) {
-     logFile.println(message);
+     logFile.println(messageDate);
      logFile.close();
    } else {
      // Serial.println(("E ") + (String)DataLogFile);
@@ -540,7 +541,7 @@ void logData(String message, byte buzz, int buzzperiode)
 
 
 
-  Serial.println(message);
+  // Serial.println(message);
   //  Serial.println(F("-"));
 }
 
@@ -554,7 +555,7 @@ String getDateTime()
   // Affiche l'heure courante retournee par le module RTC
   // Note : le %02d permet d'afficher les chiffres sur 2 digits (01, 02, ....)
   //ex : "2021/12/08 18:12:20"
-  sprintf(heure, "%4d\\/%02d\\/%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
+  sprintf(heure, "%4d\/%02d\/%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 
   // Serial.println(heure);
   return heure;
@@ -618,17 +619,17 @@ void checkCommands()
 {
   if (newData == true)
   {
-    Serial.print(F("Rcv : "));
+    //Serial.print(F("Rcv : "));
     Serial.println(receivedChars);
 
     if (strcmp(receivedChars, "l") == 0)
     {
       readSDCard();
     }
-    else if (strcmp(receivedChars, "s") == 0)
-    {
-      printStatus();
-    }
+    // else if (strcmp(receivedChars, "s") == 0)
+    // {
+    //   printStatus();
+    // }
     // else if (strcmp(receivedChars, "t") == 0)
     // {
     //   Serial.println(getBatteryTemperature());
@@ -836,6 +837,7 @@ void loop()
     SOC = 500;
     SOCUpdatedTime = millis();
     logData(F("Start"), 0);
+    bip(1000);
   }
 
   // Collecte des infos Victron BMV702 si bouton ON
