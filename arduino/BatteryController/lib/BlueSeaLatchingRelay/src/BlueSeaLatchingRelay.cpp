@@ -85,6 +85,7 @@ void BlueSeaLatchingRelay::setOpened()
 		{
 			// Le relais est marqué comme ouvert (non passant)
 			this->isReadyToOpen = BlueSeaLatchingRelay::RELAY_OPEN;
+			this->waitingForOpening = false;
 
 #if DEBUGR == 1
 			Serial.print(this->name);
@@ -134,8 +135,46 @@ void BlueSeaLatchingRelay::applyReadyActions()
 {
 	if ((this->isForceToOpen != 1) && (this->isForceToClose != 1))
 	{
-		if (this->isReadyToOpen == 1)
-			this->setOpened();
+		if (this->isReadyToOpen == 1) {
+
+			// si un délais doit être appliqué 
+			// avant l'ouverture du relais
+			if(this->delayBeforeOpening > 0) {
+
+				// initialisation du compte à rebours
+				if(this->waitingForOpening == false) {
+					this->delayBeforeOpeningStartMillis = millis();
+					this->waitingForOpening = true;
+					#if DEBUGR == 1
+					Serial.println(F("Wop.."));
+					#endif;
+				}
+
+				// Si un compte à rebours à déjà été lancé
+				if(this->delayBeforeOpeningStartMillis != 0) {	
+					
+					// unsigned long lapsTime = millis() - this->delayBeforeOpeningStartMillis;
+					// Time to open the relay
+					if((millis() - this->delayBeforeOpeningStartMillis) >= this->delayBeforeOpening) {
+						this->setOpened();
+						this->delayBeforeOpeningStartMillis = 0;
+						this->waitingForOpening = false;
+						#if DEBUGR == 1
+						 Serial.println(F("wEnd."));
+						#endif
+
+					} else {
+						#if DEBUGR == 1
+						 Serial.println(millis() - this->delayBeforeOpeningStartMillis);
+						#endif
+					}
+				} 
+
+			} else {
+				this->setOpened();
+			}
+		}
+			
 
 		else if (this->isReadyToClose == 1)
 			this->setClosed();

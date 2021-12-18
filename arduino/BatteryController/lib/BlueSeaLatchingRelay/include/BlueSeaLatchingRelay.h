@@ -22,8 +22,18 @@ class BlueSeaLatchingRelay {
     byte isReadyToClose = 0;
     byte isForceToOpen = 0;
     byte isForceToClose = 0;
- 
+
+    // Delay time before opening the Charge Relay™™
+    // value in ms
+    unsigned int delayBeforeOpening  = 0;
+
+    // Begining time for the delay before opening
+    // works only for setReadyToOpen, not for forceToOpen
+    unsigned long delayBeforeOpeningStartMillis = 0;
+
+    bool waitingForOpening = false;
     
+    // Name of the Relay, usefull for logs
     String name;
     
     // Opening or closing time in ms

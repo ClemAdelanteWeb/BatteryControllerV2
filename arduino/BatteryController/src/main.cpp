@@ -10,6 +10,7 @@
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
 #define IS_RTC 1
+#define IS_SERIAL 0
 
 //------
 // SETTINGS
@@ -62,6 +63,11 @@ const int CellsDifferenceMaxLimit = 500;
 // in mV
 // default 250
 const int CellsDifferenceMaxReset = 400;
+
+// Delay time before opening the Charge Relay
+// The charge Output status will be HIGH right away and the charge relay will be opened after the delay
+// default 5 sec (5000)
+const unsigned int delayBeforeChargeOpening = 5000;
 
 //------
 // PINS PARAMS
@@ -139,7 +145,7 @@ const byte TemperatureMinChargeReset = 5; // valeur à partir de laquelle on aut
 AltSoftSerial Bmv;
 
 // RS485 communication
-// SoftwareSerial RS485(RS485PinRx, RS485PinTx); // RX, TX
+ // SoftwareSerial RS485(RS485PinRx, RS485PinTx); // RX, TX
 
 Thread RunApplication = Thread();
 
@@ -253,9 +259,13 @@ void setup()
   ChargeRelay.openPin = ChargeRelayOpenPin;
   ChargeRelay.closePin = ChargeRelayClosePin;
   ChargeRelay.statePin = ChargeRelayStatePin;
+  ChargeRelay.delayBeforeOpening = delayBeforeChargeOpening;
 
   // Serial.begin(19200); // fonctionnait sur la v2 à cette vitesse
+  #if IS_SERIAL
   Serial.begin(19200);
+  #endif
+
   Bmv.begin(19200); // Victron Baudrate = 19200
 
   RunApplication.onRun(run);
@@ -274,18 +284,20 @@ void setup()
    }
 
 #if IS_RTC
-  if (!rtc.begin())
+  if (! rtc.begin()) {
+    #if IS_SERIAL
+    Serial.println(F("Couldn't find RTC"));
+   #endif
+
+   while (1);
+ }
+  if (!rtc.isrunning())
   {
-    //Serial.println(F("Couldn't find RTC"));
-    //  Serial.flush();
-    while (1)
-      delay(10);
-  }
-  //if (!rtc.isrunning())
-  //{
-    // Serial.println(F("RTC NOT running"));
+    #if IS_SERIAL
+     Serial.println(F("RTC NOT running"));
+     #endif
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  //}
+  }
 #endif
 
    // Serial.println(F("END STP"));
@@ -462,13 +474,22 @@ void readSDCard()
    // if the file is available, write to it:
    if (logFile) {
      while (logFile.available()) {
+       #if IS_SERIAL
        Serial.write(logFile.read());
+       #endif
      }
   
      logFile.close();
    } else {
      // Serial.println("No SD card File");
    }
+}
+
+void deleteFile() 
+{
+   SD.remove("log.txt");
+   SD.remove("log2.txt");
+   SD.remove("log3.txt");
 }
 
 // Return battery temperature
@@ -626,6 +647,10 @@ void checkCommands()
     {
       readSDCard();
     }
+    if (strcmp(receivedChars, "d") == 0)
+    {
+      deleteFile();
+    }
     // else if (strcmp(receivedChars, "s") == 0)
     // {
     //   printStatus();
@@ -776,6 +801,8 @@ void printStatus()
   //   int  tempVal = getMaxCellVoltageDifference();
 
   // version 2
+
+
   Serial.print(getBatteryVoltage());
    Serial.print(F(";"));
   Serial.print(getBatteryTemperature());
@@ -798,6 +825,8 @@ Serial.print(F("  "));
   Serial.print(F(";"));
   Serial.print(LoadRelay.getState());
   Serial.print(F("  "));
+
+
   //SOC Infos
   Serial.print(SOCChargeCycling);
    Serial.print(F(";"));
@@ -807,6 +836,9 @@ Serial.print(F("  "));
   Serial.print(F(";"));
   Serial.print(isUseBMVSerialInfos());
  Serial.print(F("  "));
+ Serial.print(ChargeRelay.waitingForOpening);
+  Serial.print(F("  "));
+
   // HIGH / LOW voltage / LOW T°
   Serial.print(LowVoltageDetected);
  Serial.print(F(";"));
@@ -820,6 +852,7 @@ Serial.print(F("  "));
   Serial.print(F(";"));
   Serial.print((int)+LowBatteryTemperatureDetected);
   Serial.println();
+
 }
 
 void loop()
@@ -830,14 +863,19 @@ void loop()
     isfirstrun = 0;
     // première lecture des tensions
     checkCellsVoltage();
-    printStatus();
+    
+    #if IS_SERIAL
+      printStatus();
+    #endif
     // Serial.println(F("first run"));
 
     // pour éviter d'avoir un SOC à 0 au lancement du programe
     SOC = 500;
     SOCUpdatedTime = millis();
     logData(F("Start"), 0);
-    bip(1000);
+
+    // BIP au démarrage
+    bip(250);
   }
 
   // Collecte des infos Victron BMV702 si bouton ON
@@ -846,19 +884,14 @@ void loop()
     readBmvData();
   }
 
+#if IS_SERIAL
   // Serial commandes buffering
   readSerialData();
 
   // check for new command
   checkCommands();
+#endif
 
-  // Serial.println(ADS.readADC(1));
-  // Serial.println(ADS.readADC(2));
-  // Serial.println(ADS.readADC(1));
-  // Serial.println(ADS.readADC(1));
-
-  // Serial.println("__");
-  //
 
   if (RunApplication.shouldRun())
   {
@@ -879,7 +912,9 @@ void run()
   checkCellsVoltage();
 
   // affichage du status
+  #if IS_SERIAL
   printStatus();
+  #endif
 
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
@@ -1363,14 +1398,14 @@ void run()
   LoadRelay.applyReadyActions();
   ChargeRelay.applyReadyActions();
 
-  // PUT Charging Status Output = HIGH if charging relay is closed
-  // Relay closed : getState() == 1
-  if (ChargeRelay.getState() == 1)
+  // PUT Charging Status Output = LOW if charging relay is opened OR is waiting for being opened
+  // Relay opened : getState() == 0
+  if (ChargeRelay.waitingForOpening == true || ChargeRelay.getState() == 0)
   {
-    digitalWrite(ChargingStatusOutputPin, 1);
+    digitalWrite(ChargingStatusOutputPin, 0);
   }
   else
   {
-    digitalWrite(ChargingStatusOutputPin, 0);
+    digitalWrite(ChargingStatusOutputPin, 1);
   }
 }
