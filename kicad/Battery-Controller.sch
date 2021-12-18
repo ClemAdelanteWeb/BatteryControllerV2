@@ -169,23 +169,23 @@ $EndComp
 $Comp
 L Transistor_BJT:TIP120 Q1
 U 1 1 61B48AE2
-P 6750 6400
-F 0 "Q1" H 6941 6446 50  0000 L CNN
-F 1 "TIP120" H 6941 6355 50  0000 L CNN
-F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 6950 6500 50  0001 C CNN
-F 3 "~" H 6750 6400 50  0001 C CNN
-	1    6750 6400
+P 6750 6300
+F 0 "Q1" H 6941 6346 50  0000 L CNN
+F 1 "TIP120" H 6941 6255 50  0000 L CNN
+F 2 "Package_TO_SOT_THT:TO-220-3_Vertical" H 6950 6400 50  0001 C CNN
+F 3 "~" H 6750 6300 50  0001 C CNN
+	1    6750 6300
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R R10
 U 1 1 61B49F2F
-P 6400 6400
-F 0 "R10" V 6193 6400 50  0000 C CNN
-F 1 "1K" V 6284 6400 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 6330 6400 50  0001 C CNN
-F 3 "~" H 6400 6400 50  0001 C CNN
-	1    6400 6400
+P 6400 6300
+F 0 "R10" V 6193 6300 50  0000 C CNN
+F 1 "1K" V 6284 6300 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 6330 6300 50  0001 C CNN
+F 3 "~" H 6400 6300 50  0001 C CNN
+	1    6400 6300
 	0    1    1    0   
 $EndComp
 Wire Notes Line
@@ -197,21 +197,21 @@ Wire Notes Line
 Wire Notes Line
 	5900 5650 5900 6950
 Text Notes 6400 6900 0    50   ~ 0
-Indication sortie charge possible\n
+Indication sortie charge possible\nLOW SIDE (GND output)\n
 $Comp
 L Device:Fuse F1
 U 1 1 61B5B3F4
-P 6850 6050
-F 0 "F1" H 6910 6096 50  0000 L CNN
-F 1 "Fuse" H 6910 6005 50  0000 L CNN
-F 2 "Fuse:Fuseholder_Blade_ATO_Littelfuse_Pudenz_2_Pin" V 6780 6050 50  0001 C CNN
-F 3 "~" H 6850 6050 50  0001 C CNN
-	1    6850 6050
+P 6850 5950
+F 0 "F1" H 6910 5996 50  0000 L CNN
+F 1 "Fuse" H 6910 5905 50  0000 L CNN
+F 2 "Fuse:Fuseholder_Blade_ATO_Littelfuse_Pudenz_2_Pin" V 6780 5950 50  0001 C CNN
+F 3 "~" H 6850 5950 50  0001 C CNN
+	1    6850 5950
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6850 6600 6850 6750
-Text GLabel 6850 6750 2    50   Input ~ 0
+	6850 6500 6850 6650
+Text GLabel 6850 5750 2    50   Input ~ 0
 CHARGING-STATUS
 Wire Notes Line
 	7200 8250 5900 8250
@@ -411,10 +411,10 @@ Text GLabel 6200 4200 0    50   Input ~ 0
 D5
 Text GLabel 6200 4300 0    50   Input ~ 0
 D6
-Text GLabel 6200 6400 0    50   Input ~ 0
+Text GLabel 6200 6300 0    50   Input ~ 0
 D6
 Wire Wire Line
-	6250 6400 6200 6400
+	6250 6300 6200 6300
 $Comp
 L Connector:Screw_Terminal_01x04 J1
 U 1 1 61C9A0B6
@@ -920,10 +920,10 @@ F 3 "" H 13550 4700 50  0001 C CNN
 	1    13550 4700
 	1    0    0    -1  
 $EndComp
-Text GLabel 6850 5850 0    50   Input ~ 0
-BAT-12V
+Text GLabel 6850 6650 2    50   Input ~ 0
+BAT-GND
 Wire Wire Line
-	6850 5850 6850 5900
+	6850 5750 6850 5800
 $Comp
 L yaaj_dcdc_stepdown_lm2596:YAAJ_DCDC_StepDown_LM2596 U1
 U 1 1 626DB2CE
@@ -1508,4 +1508,6 @@ F 4 "Limit gate current" V 9550 8250 50  0001 C CNN "Field4"
 $EndComp
 Wire Wire Line
 	9400 8250 9300 8250
+Text GLabel 7200 4100 2    50   Input ~ 0
+3.3V
 $EndSCHEMATC

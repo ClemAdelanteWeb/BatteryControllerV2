@@ -6,10 +6,11 @@
 #include "Thread.h"
 #include "BlueSeaLatchingRelay.h"
 #include "ADS1X15.h"
-// #include "SD.h"
+#include "SD.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
-#define IS_RTC 0
+#define IS_RTC 1
+#define IS_SERIAL 0
 
 //------
 // SETTINGS
@@ -19,16 +20,16 @@
 const byte activateCheckingCellsVoltageDifference = 1;
 
 // Opening charge relay for SOC >= SOCMax
-const int SOCMax = 940;
+const int SOCMax = 1000;
 
 // Re-Close Charge Relay when SOCMaxReset is reached
-const int SOCMaxReset = 935;
+const int SOCMaxReset = 950;
 
 // Opening Load relay if SOC <= SOCmin
-const int SOCMin = 200;
+const int SOCMin = 180;
 
 // Re-Close Load Relay when SOCMinReset is reached
-const int SOCMinReset = 225;
+const int SOCMinReset = 200;
 
 // SOC Maximum time considerated valid
 // in mS
@@ -41,7 +42,7 @@ const int BatteryVoltageMax = 13800; // 13,8v = 3,45v / Cell
 const int BatteryVoltageMaxReset = 13360;
 
 // Minimum Voltage security
-const int BatteryVoltageMin = 12400; // 12,4v = 3,1v / Cell
+const int BatteryVoltageMin = 12000; // 12V = 3v / Cell
 
 // Waiting for Min Reset Voltage after reaching Min Voltage (time to re-charge the battery enough to use it)
 const int BatteryVoltageMinReset = 12800; // 12,9  = 3,225v / Cell
@@ -56,12 +57,17 @@ const int CellVoltageMax = 3600;
 // Absolute value (-100mV) = 100mV).
 // in mV
 // default 300
-const int CellsDifferenceMaxLimit = 300;
+const int CellsDifferenceMaxLimit = 500;
 
 // Voltage difference maximum to considere that the battery bank can be starting using again
 // in mV
 // default 250
-const int CellsDifferenceMaxReset = 250;
+const int CellsDifferenceMaxReset = 400;
+
+// Delay time before opening the Charge Relay
+// The charge Output status will be HIGH right away and the charge relay will be opened after the delay
+// default 5 sec (5000)
+const unsigned int delayBeforeChargeOpening = 5000;
 
 //------
 // PINS PARAMS
@@ -95,10 +101,11 @@ const int cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-    0.1780487,
-    0.2134769,
-    0.4977307,
-    0.5890515};
+  0.1780487,
+  0.2142193,
+  0.4980978,
+  0.5896120
+};
 
 // LOGGING Params
 #if IS_RTC
@@ -108,8 +115,9 @@ const float adc_calibration[cellsNumber] = {
 RTC_DS1307 rtc;
 #endif
 
-const byte SDCardPinSelect = 10;
-const String DataLogFile = "log.txt";
+// Log on SD Card
+uint8_t SDCardPinSelect = 10;
+const char *DataLogFile = "log3.txt";
 
 //------
 // Temperature sensor settings
@@ -137,7 +145,7 @@ const byte TemperatureMinChargeReset = 5; // valeur à partir de laquelle on aut
 AltSoftSerial Bmv;
 
 // RS485 communication
-// SoftwareSerial RS485(RS485PinRx, RS485PinTx); // RX, TX
+ // SoftwareSerial RS485(RS485PinRx, RS485PinTx); // RX, TX
 
 Thread RunApplication = Thread();
 
@@ -207,14 +215,17 @@ boolean newData = false;
 // Temperature
 int BatteryTemperature;
 
+// SD Card
+File logFile;
+
 String MessageTemp;
 
 byte isfirstrun = 1;
-const char *TxtSpacer = " ";
+const char* ValuesSpacer = "/";
 int i;
 
 void logData(String message, byte buzz, int buzzperiode = 100);
-void logDataMessNum(char num, String values = "", byte buzz = 0, int buzzperiode = 100);
+void logDataMessNum(int num, String values = "", byte buzz = 0, int buzzperiode = 100);
 String getDateTime();
 void printStatus();
 int getMaxCellVoltageDifference();
@@ -223,7 +234,6 @@ void run();
 
 void setup()
 {
-  Serial.println(F("BEGIN STP"));
 
   pinMode(LoadRelayClosePin, OUTPUT);
   pinMode(LoadRelayOpenPin, OUTPUT);
@@ -249,9 +259,13 @@ void setup()
   ChargeRelay.openPin = ChargeRelayOpenPin;
   ChargeRelay.closePin = ChargeRelayClosePin;
   ChargeRelay.statePin = ChargeRelayStatePin;
+  ChargeRelay.delayBeforeOpening = delayBeforeChargeOpening;
 
   // Serial.begin(19200); // fonctionnait sur la v2 à cette vitesse
+  #if IS_SERIAL
   Serial.begin(19200);
+  #endif
+
   Bmv.begin(19200); // Victron Baudrate = 19200
 
   RunApplication.onRun(run);
@@ -264,27 +278,29 @@ void setup()
   ADS.readADC(0);     // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 
   // Initialisation Carte SD
-  //  if (!SD.begin(SDCardPinSelect)) {
-  //     Serial.println(F("sdcard wait"));
-  //    while (1);
-  //  }
+   if (!SD.begin(SDCardPinSelect)) {
+     // Serial.println(F("sdcard wait"));
+     while (1);
+   }
 
 #if IS_RTC
-  if (!rtc.begin())
-  {
-    //Serial.println(F("Couldn't find RTC"));
-    //  Serial.flush();
-    while (1)
-      delay(10);
-  }
+  if (! rtc.begin()) {
+    #if IS_SERIAL
+    Serial.println(F("Couldn't find RTC"));
+   #endif
+
+   while (1);
+ }
   if (!rtc.isrunning())
   {
-    // Serial.println(F("RTC NOT running"));
+    #if IS_SERIAL
+     Serial.println(F("RTC NOT running"));
+     #endif
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 #endif
 
-  // Serial.println(F("END STP"));
+   // Serial.println(F("END STP"));
 }
 
 // Enregistrement de toutes les tensions des cellules
@@ -453,18 +469,27 @@ boolean isSOCValid()
 
 void readSDCard()
 {
-  //  File dataFile = SD.open(DataLogFile);
-  //
-  //  // if the file is available, write to it:
-  //  if (dataFile) {
-  //    while (dataFile.available()) {
-  //      Serial.write(dataFile.read());
-  //    }
-  //
-  //    dataFile.close();
-  //  } else {
-  //    // Serial.println("No SD card File");
-  //  }
+   logFile = SD.open(DataLogFile);
+  
+   // if the file is available, write to it:
+   if (logFile) {
+     while (logFile.available()) {
+       #if IS_SERIAL
+       Serial.write(logFile.read());
+       #endif
+     }
+  
+     logFile.close();
+   } else {
+     // Serial.println("No SD card File");
+   }
+}
+
+void deleteFile() 
+{
+   SD.remove("log.txt");
+   SD.remove("log2.txt");
+   SD.remove("log3.txt");
 }
 
 // Return battery temperature
@@ -505,13 +530,15 @@ int getBatteryTemperature()
   return degrees;
 }
 
-void logDataMessNum(char num, String values, byte buzz, int buzzperiode)
+void logDataMessNum(int num, String values, byte buzz, int buzzperiode)
 {
-  MessageTemp = F("#");
-  MessageTemp += num;
-  MessageTemp += (";");
-  MessageTemp += values;
-  logData(MessageTemp, buzz, buzzperiode);
+  String MessageLog;
+  MessageLog = ("#");
+  MessageLog += (String) num;
+  MessageLog += (";");
+  MessageLog += values;
+
+  logData(MessageLog, buzz, buzzperiode);
 }
 
 // Enregistre les messages sur la carte SD
@@ -520,37 +547,22 @@ void logData(String message, byte buzz, int buzzperiode)
   String messageDate = getDateTime() + F(" ") + message;
 
   // Open Datalog file on SD Card
-  //  File dataFile = SD.open(DataLogFile, FILE_WRITE);
-  //
-  //  // if the file is available, write to it:
-  //  if (dataFile) {
-  //    dataFile.println(messageDate);
-  //    dataFile.close();
-  //  }
-  //  else {
-  //    // Serial.println("error opening "+DataLogFile);
-  //    // bip(50);
-  //    //delay(200);
-  //    // bip(5000);
-  //  }
+    logFile = SD.open(DataLogFile, FILE_WRITE);
+  
+   // if the file is available, write to it:
+   if (logFile) {
+     logFile.println(messageDate);
+     logFile.close();
+   } else {
+     // Serial.println(("E ") + (String)DataLogFile);
+     // bip(50);
+     //delay(200);
+     // bip(5000);
+   }
 
-  if (buzz == 3)
-  {
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //    bip(buzzperiode);
-    //    delay(buzzperiode);
-    //
-    //    Serial.print(F("ALARME : "));
-  }
-  else
-  {
-    //    Serial.print(F("ALERTE : "));
-  }
 
-  Serial.println(message);
+
+  // Serial.println(message);
   //  Serial.println(F("-"));
 }
 
@@ -564,7 +576,7 @@ String getDateTime()
   // Affiche l'heure courante retournee par le module RTC
   // Note : le %02d permet d'afficher les chiffres sur 2 digits (01, 02, ....)
   //ex : "2021/12/08 18:12:20"
-  sprintf(heure, "%4d\\/%02d\\/%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
+  sprintf(heure, "%4d\/%02d\/%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 
   // Serial.println(heure);
   return heure;
@@ -575,23 +587,23 @@ String getDateTime()
 
 void printParams()
 {
-  char outputParams[60];
+  // char outputParams[60];
 
-  // affichage des paramètres actuels
-  // VBat Max ; VBat Max reset; VBat Min; VBat Min Reset;; SOC Max; SOC Max Reset; SOC Min; SOC Min Reset ;; Cells diff Max, Cells diff Max Reset
-  sprintf(outputParams, "$%d;%d;%d;%d;;%d;%d;%d;%d;;%d;%d#",
-          BatteryVoltageMax,
-          BatteryVoltageMaxReset,
-          BatteryVoltageMin,
-          BatteryVoltageMinReset,
-          SOCMax,
-          SOCMaxReset,
-          SOCMin,
-          SOCMinReset,
-          CellsDifferenceMaxLimit,
-          CellsDifferenceMaxReset);
+  // // affichage des paramètres actuels
+  // // VBat Max ; VBat Max reset; VBat Min; VBat Min Reset;; SOC Max; SOC Max Reset; SOC Min; SOC Min Reset ;; Cells diff Max, Cells diff Max Reset
+  // sprintf(outputParams, "$%d;%d;%d;%d;;%d;%d;%d;%d;;%d;%d#",
+  //         BatteryVoltageMax,
+  //         BatteryVoltageMaxReset,
+  //         BatteryVoltageMin,
+  //         BatteryVoltageMinReset,
+  //         SOCMax,
+  //         SOCMaxReset,
+  //         SOCMin,
+  //         SOCMinReset,
+  //         CellsDifferenceMaxLimit,
+  //         CellsDifferenceMaxReset);
 
-  Serial.println(outputParams);
+  // Serial.println(outputParams);
 }
 
 // Receiving Serial commands
@@ -628,29 +640,44 @@ void checkCommands()
 {
   if (newData == true)
   {
-    Serial.print("Rcv : ");
+    //Serial.print(F("Rcv : "));
     Serial.println(receivedChars);
 
     if (strcmp(receivedChars, "l") == 0)
     {
       readSDCard();
     }
-    else if (strcmp(receivedChars, "s") == 0)
+    if (strcmp(receivedChars, "d") == 0)
     {
-      printStatus();
+      deleteFile();
     }
-    else if (strcmp(receivedChars, "t") == 0)
-    {
-      Serial.println(getBatteryTemperature());
-    }
-    else if (strcmp(receivedChars, "p") == 0)
-    {
-      printParams();
-    }
-    else if (strcmp(receivedChars, "a") == 0)
-    {
-      checkCellsVoltage();
-    }
+    // else if (strcmp(receivedChars, "s") == 0)
+    // {
+    //   printStatus();
+    // }
+    // else if (strcmp(receivedChars, "t") == 0)
+    // {
+    //   Serial.println(getBatteryTemperature());
+    // }
+    // else if (strcmp(receivedChars, "p") == 0)
+    // {
+    //   printParams();
+    // }
+    // else if (strcmp(receivedChars, "a") == 0)
+    // {
+    //   checkCellsVoltage();
+    // }
+    // else if (strcmp(receivedChars, "i") == 0)
+    // {
+    //    // MessageTemp = (String)SOCCurrent + F("/") + (String)SOCMinReset;
+        
+    //     logDataMessNum(19, F("monM"), 0);
+    //     logData(F("messM2"), 0);
+
+    // }
+    // else if(strcmp(receivedChars, "w")) {
+    //     SD.remove("l.txt");
+    // }
 
     newData = false;
   }
@@ -733,6 +760,8 @@ int getMaxCellVoltageDifference()
 
 void printStatus()
 {
+
+
   //char output[36];
 
   // affichage des données actuelles
@@ -772,50 +801,58 @@ void printStatus()
   //   int  tempVal = getMaxCellVoltageDifference();
 
   // version 2
+
+
   Serial.print(getBatteryVoltage());
-  Serial.print(";");
+   Serial.print(F(";"));
   Serial.print(getBatteryTemperature());
-  Serial.print(";");
+ Serial.print(F(";"));
   Serial.print(getBatterySOC());
-  Serial.print("  ");
+  Serial.print(F("  "));
   // Cells
   Serial.print(getAdsCellVoltage(0));
-  Serial.print(";");
+ Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(1));
-  Serial.print(";");
+ Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(2));
-  Serial.print(";");
+ Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(3));
-  Serial.print(";");
+  Serial.print(F(";"));
   Serial.print(getMaxCellVoltageDifference());
-  Serial.print("  ");
+Serial.print(F("  "));
   //Relais
   Serial.print(ChargeRelay.getState());
-  Serial.print(";");
+  Serial.print(F(";"));
   Serial.print(LoadRelay.getState());
-  Serial.print("  ");
+  Serial.print(F("  "));
+
+
   //SOC Infos
   Serial.print(SOCChargeCycling);
-  Serial.print(";");
+   Serial.print(F(";"));
   Serial.print(SOCDischargeCycling);
-  Serial.print(";");
+   Serial.print(F(";"));
   Serial.print(isEnabledBMVSerialInfos());
-  Serial.print(";");
+  Serial.print(F(";"));
   Serial.print(isUseBMVSerialInfos());
-  Serial.print("  ");
+ Serial.print(F("  "));
+ Serial.print(ChargeRelay.waitingForOpening);
+  Serial.print(F("  "));
+
   // HIGH / LOW voltage / LOW T°
   Serial.print(LowVoltageDetected);
-  Serial.print(";");
+ Serial.print(F(";"));
   Serial.print(HighVoltageDetected);
-  Serial.print(";");
+   Serial.print(F(";"));
   Serial.print(CellsDifferenceDetected);
-  Serial.print(";");
+  Serial.print(F(";"));
   Serial.print(CellVoltageMinDetected);
-  Serial.print(";");
+   Serial.print(F(";"));
   Serial.print(CellVoltageMaxDetected);
-  Serial.print(";");
+  Serial.print(F(";"));
   Serial.print((int)+LowBatteryTemperatureDetected);
   Serial.println();
+
 }
 
 void loop()
@@ -826,12 +863,19 @@ void loop()
     isfirstrun = 0;
     // première lecture des tensions
     checkCellsVoltage();
-    printStatus();
+    
+    #if IS_SERIAL
+      printStatus();
+    #endif
     // Serial.println(F("first run"));
 
     // pour éviter d'avoir un SOC à 0 au lancement du programe
     SOC = 500;
     SOCUpdatedTime = millis();
+    logData(F("Start"), 0);
+
+    // BIP au démarrage
+    bip(250);
   }
 
   // Collecte des infos Victron BMV702 si bouton ON
@@ -840,19 +884,14 @@ void loop()
     readBmvData();
   }
 
+#if IS_SERIAL
   // Serial commandes buffering
-  // readSerialData();
+  readSerialData();
 
   // check for new command
-  // checkCommands();
+  checkCommands();
+#endif
 
-  // Serial.println(ADS.readADC(1));
-  // Serial.println(ADS.readADC(2));
-  // Serial.println(ADS.readADC(1));
-  // Serial.println(ADS.readADC(1));
-
-  // Serial.println("__");
-  //
 
   if (RunApplication.shouldRun())
   {
@@ -873,7 +912,9 @@ void run()
   checkCellsVoltage();
 
   // affichage du status
+  #if IS_SERIAL
   printStatus();
+  #endif
 
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
@@ -976,6 +1017,7 @@ void run()
         LoadRelay.setReadyToClose();
 
         // #19 SOC min reset reached
+        MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMinReset;
         logDataMessNum(19, MessageTemp);
       }
     }
@@ -1011,7 +1053,7 @@ void run()
         ChargeRelay.setReadyToClose();
 
         // #21 Cancelling Discharge Cycling
-        MessageTemp = (String)SOCCurrent + F("/") + (String)SOCMaxReset;
+        MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMaxReset;
         logDataMessNum(21, MessageTemp);
       }
     }
@@ -1075,7 +1117,7 @@ void run()
       ChargeRelay.setReadyToOpen();
 
       // #25 SOC Current > Max : current/max"
-      MessageTemp = (String)SOCCurrent + F("/") + (String)SOCMax;
+      MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMax;
       logDataMessNum(25, MessageTemp);
     }
 
@@ -1087,7 +1129,7 @@ void run()
       SOCChargeCycling = true;
 
       LoadRelay.setReadyToOpen();
-      MessageTemp = (String)SOCCurrent + F(",") + TxtSpacer + (String)SOCMin;
+      MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMin;
       logDataMessNum(1, MessageTemp, 0);
     }
   }
@@ -1104,7 +1146,7 @@ void run()
       HighVoltageDetected = true;
 
       ChargeRelay.forceToOpen();
-      MessageTemp = (String)(CurrentBatteryVoltage / 1000.0);
+      MessageTemp = (String)(CurrentBatteryVoltage);
       logDataMessNum(2, MessageTemp, 0);
     }
     else
@@ -1117,7 +1159,7 @@ void run()
         {
 
           ChargeRelay.forceToOpen();
-          logDataMessNum(3, "", 0);
+          logDataMessNum(3);
         }
 
         // if Voltage battery low enough, we close the Charge Relay
@@ -1126,7 +1168,7 @@ void run()
           HighVoltageDetected = false;
           ChargeRelay.setReadyToClose();
 
-          logDataMessNum(4, "", 0);
+          logDataMessNum(4);
         }
       }
     }
@@ -1138,7 +1180,7 @@ void run()
       LowVoltageDetected = true;
 
       LoadRelay.forceToOpen();
-      logDataMessNum(5, "", 0);
+      logDataMessNum(5);
 
       // Constrain battery to charge
       // in case of SOC >= max SOC, charge relay is open (can happen when very low consumption is not detected by Victron monitor)
@@ -1148,7 +1190,7 @@ void run()
         ChargeRelay.forceToClose();
 
         MessageTemp = (String)getBatterySOC();
-        MessageTemp += F(",");
+        MessageTemp += ValuesSpacer;
         MessageTemp += (String)CurrentBatteryVoltage;
         logDataMessNum(6, MessageTemp, 0);
       }
@@ -1163,7 +1205,7 @@ void run()
         {
 
           LoadRelay.forceToOpen();
-          logDataMessNum(7, "", 0);
+          logDataMessNum(7);
         }
 
         // Constrain battery to charge
@@ -1172,7 +1214,7 @@ void run()
 
           ChargeRelay.forceToClose();
 
-          logDataMessNum(8, "", 0);
+          logDataMessNum(8);
         }
 
         // if Voltage battery high enough, we close the Load Relay
@@ -1182,7 +1224,7 @@ void run()
 
           LoadRelay.setReadyToClose();
 
-          logDataMessNum(9, "", 0);
+          logDataMessNum(9);
         }
       }
     }
@@ -1194,7 +1236,7 @@ void run()
     LoadRelay.forceToOpen();
 
     MessageTemp = (String)(BatteryVoltageUpdatedTime / 1000);
-    logDataMessNum(10, MessageTemp, 1, 3000);
+    logDataMessNum(10, MessageTemp, 1);
   }
 
   //---
@@ -1211,7 +1253,7 @@ void run()
 
       LoadRelay.forceToOpen();
       MessageTemp = (String)CellsDifferenceMax;
-      logDataMessNum(11, MessageTemp, 1, 5000);
+      logDataMessNum(11, MessageTemp, 1);
     }
     else
     {
@@ -1258,7 +1300,7 @@ void run()
       LoadRelay.forceToClose();
 
       // #26 High individual cell voltage
-      MessageTemp = (String)(i) + F("/") + (String)cellVoltage;
+      MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(26, MessageTemp, 1);
     }
     else
@@ -1273,7 +1315,7 @@ void run()
           CellVoltageMaxDetected = false;
 
           // #27 RST OK : high V cell good
-          MessageTemp = (String)(i) + F("/") + (String)cellVoltage;
+          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
           logDataMessNum(27, MessageTemp, 1);
         }
       }
@@ -1290,7 +1332,7 @@ void run()
       // force charging
       ChargeRelay.forceToClose();
 
-      MessageTemp = (String)(i) + F("/") + (String)cellVoltage;
+      MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(28, MessageTemp, 1);
     }
     else
@@ -1305,7 +1347,7 @@ void run()
           CellVoltageMinDetected = false;
 
           // #29 RST Cell Voltage
-          MessageTemp = (String)(i) + F("/") + (String)cellVoltage;
+          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
           logDataMessNum(29, MessageTemp, 0);
         }
       }
@@ -1356,14 +1398,14 @@ void run()
   LoadRelay.applyReadyActions();
   ChargeRelay.applyReadyActions();
 
-  // PUT Charging Status Output = HIGH if charging relay is closed
-  // Relay closed : getState() == 1
-  if (ChargeRelay.getState() == 1)
+  // PUT Charging Status Output = LOW if charging relay is opened OR is waiting for being opened
+  // Relay opened : getState() == 0
+  if (ChargeRelay.waitingForOpening == true || ChargeRelay.getState() == 0)
   {
-    digitalWrite(ChargingStatusOutputPin, 1);
+    digitalWrite(ChargingStatusOutputPin, 0);
   }
   else
   {
-    digitalWrite(ChargingStatusOutputPin, 0);
+    digitalWrite(ChargingStatusOutputPin, 1);
   }
 }

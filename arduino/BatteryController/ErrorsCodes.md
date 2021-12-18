@@ -1,5 +1,5 @@
 #1 SOC min reached : now / min 
-    values : SOC actual, SOC Min param
+    values : SOC actual/ SOC Min param
 #2 High Voltage detected
     values : Voltage
 #3 High voltage detected, Force Opening Charge Relay 
@@ -20,6 +20,7 @@
 #15 SOC Current > SOC Min
 #16 Load relay closing, routine without SOC
 #17 SOC Current < SOC Max Charge relay closing
+    => can happen when forcing open Charge Relay manualy 
 #18 SOC Charge relay closing, routine without SOC
 #19 SOC min reset reached
     values : SOCCurrent/SOCMinReset

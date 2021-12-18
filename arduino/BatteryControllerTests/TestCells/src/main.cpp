@@ -15,9 +15,9 @@ const int cellsNumber = 4;
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
   0.1780487,
-  0.2134769,
-  0.4977307,
-  0.5890515
+  0.2142193,
+  0.4980978,
+  0.5896120
 };
 
 
@@ -49,46 +49,44 @@ void setup(void)
 void loop(void) 
 {
   Serial.println("Loop");
-  // checkCellsVoltage();
-  // printStatus();
+  checkCellsVoltage();
+  //printStatus();
   delay(3000);
 }
 
 
 void printStatus() {
-  char output[60];
 
-  // affichage des données actuelles
-  //
-  //  V Batt ; T° Batt ;;
-  //  V Cell1 ; V Cell2 ; V Cell3 ; V Cell4 ; V Cell Max Diff ;;
-  //  Ch Relay Status ; Load Relay Status ;;
-  //  SOC Charge Cycling ; SOC Discharge Cycling;;
-  //  Use SOC data ; Using SOC data ? ; SOC Value ;;
-  //  Low Voltage detected ; High voltage detected
-  //$%d;%s;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;;%d;%d;;%d;%d#
-   sprintf(output, "Cell 1 : $%d V \n Cell 2 : %d mV \n Cell 3 : %d mV \n Cell 4 : %d mV \n Max Diff : %d mV",
-           getAdsCellVoltage(0),
-           getAdsCellVoltage(1),
-           getAdsCellVoltage(2),
-           getAdsCellVoltage(3),
-           getMaxCellVoltageDifference()
-    );
+
+  
+
+  int iCell;
+  for (iCell = 0; iCell <= cellsNumber; iCell++) {
+
+      Serial.print("Cell "); Serial.print(iCell); Serial.print(" "); 
+      Serial.println(getAdsCellVoltage(iCell));
+  }
+
+      Serial.print("Cell max diff : "); Serial.println(getMaxCellVoltageDifference());
+
 
 }
 
 
-// Enregistrement de toutes les tensions des cellules
-void checkCellsVoltage() {
+
+void checkCellsVoltage()
+{
   unsigned long averageCell;
   int iCell, iTemp2;
   uint16_t vTemp;
 
-  for (iCell = (cellsNumber - 1); iCell >= 0; iCell--) {
+  for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
+  {
     averageCell = 0;
 
     // take N samples in a row, with a slight delay
-    for (iTemp2 = 0; iTemp2 < 5; iTemp2++) {
+    for (iTemp2 = 0; iTemp2 < 5; iTemp2++)
+    {
       averageCell += ADS.readADC(iCell);
       // Serial.println(averageCell);
       delay(10);
@@ -97,9 +95,16 @@ void checkCellsVoltage() {
     // moyenne des échantillons
     averageCell = averageCell / 5;
 
-    vTemp = (int)  (averageCell * adc_calibration[iCell]);
+  
 
-    if (vTemp < 0) {
+    vTemp = (int)(averageCell * adc_calibration[iCell]);
+
+          Serial.print("Averaage : "); Serial.print(iCell); Serial.print(" ");
+       Serial.print(averageCell); Serial.print(" / ");
+       Serial.println(vTemp);
+
+    if (vTemp < 0)
+    {
       vTemp = 0;
     }
     BatteryCellsVoltage[iCell] = vTemp;
@@ -111,36 +116,38 @@ void checkCellsVoltage() {
    Calculate max cell difference between all cells
    Return value in mV
 */
-int getMaxCellVoltageDifference() {
+int getMaxCellVoltageDifference()
+{
 
   // Cells voltages
-  int  cellsVoltage[(4 - 1)];
-  int  minValue = 0;
-  int  maxValue = 0;
+  // unsigned int cellsVoltage[(cellsNumber - 1)];
+  unsigned int minValue = 0;
+  unsigned int maxValue = 0;
+  unsigned int tempCellV = 0;
   int iTemp4;
 
-  for (iTemp4 = (4 - 1); iTemp4 >= 0; iTemp4--) {
-    if (iTemp4 > 0) {
-      cellsVoltage[iTemp4] = getAdsCellVoltage(iTemp4) - getAdsCellVoltage((iTemp4 - 1));
-    } else {
-      cellsVoltage[iTemp4] = getAdsCellVoltage(iTemp4);
+  for (iTemp4 = (cellsNumber - 1); iTemp4 >= 0; iTemp4--)
+  {
+    if (iTemp4 > 0)
+    {
+      tempCellV = getAdsCellVoltage(iTemp4) - getAdsCellVoltage((iTemp4 - 1));
     }
-    //
-    //    Serial.print("item ");
-    //Serial.println( cellsVoltage[iTemp4]);
-    //
-    //
+    else
+    {
+      tempCellV = getAdsCellVoltage(iTemp4);
+    }
+
     //    // enregistrement de la plus grande valeur
-    if (cellsVoltage[iTemp4] > maxValue) {
-      maxValue = cellsVoltage[iTemp4];
+    if (tempCellV > maxValue)
+    {
+      maxValue = tempCellV;
     }
-    //
-    //
-    if ((cellsVoltage[iTemp4] < minValue) || (minValue == 0)) {
-      minValue = cellsVoltage[iTemp4];
+
+    if ((tempCellV < minValue) || (minValue == 0))
+    {
+      minValue = tempCellV;
     }
   }
-
 
   return maxValue - minValue;
 }
