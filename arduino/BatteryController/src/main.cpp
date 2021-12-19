@@ -130,11 +130,12 @@ const char *monthName[12] = {
 // Log on SD Card
 
 #if IS_SDCARD
-#include "SD.h"
+#include <SdFat.h>
+SdFat sd;
+SdFile logFile;
 
 uint8_t SDCardPinSelect = 10;
 const char *DataLogFile = "log3.txt";
-File logFile;
 #endif
 
 //------
@@ -308,12 +309,8 @@ void setup()
 
 #if IS_SDCARD
   // Initialisation Carte SD
-  if (!SD.begin(SDCardPinSelect))
-  {
-    // Serial.println(F("sdcard wait"));
-    while (1)
-      ;
-  }
+  if (!sd.begin(SDCardPinSelect, SPI_HALF_SPEED)) 
+    sd.initErrorHalt();
 #endif
 
 #if IS_RTC
@@ -496,31 +493,28 @@ boolean isSOCValid()
 #if IS_SDCARD
 void readSDCard()
 {
-  logFile = SD.open(DataLogFile);
-
-  // if the file is available, write to it:
-  if (logFile)
-  {
-    while (logFile.available())
-    {
-#if IS_SERIAL
-      Serial.write(logFile.read());
-#endif
-    }
-
-    logFile.close();
+  int data;
+   if (!logFile.open(DataLogFile, O_READ)) {
+  //  sd.errorHalt("opening test.txt for read failed");
   }
-  else
-  {
-    // Serial.println("No SD card File");
+
+  while ((data = logFile.read()) >= 0) {
+    #if IS_SERIAL
+    Serial.write(data);
+    #endif
   }
+
+  // close the file:
+  logFile.close();
 }
 
 void deleteFile()
 {
-  SD.remove(DataLogFile);
+  sd.remove(DataLogFile);
 }
 #endif
+
+
 // Return battery temperature
 // average of 5 samples
 int getBatteryTemperature()
@@ -576,19 +570,12 @@ void logData(String message, byte nivel = 0)
 #if IS_SDCARD
   String messageDate = getDateTime() + F(" ") + message;
 
-  // Open Datalog file on SD Card
-  logFile = SD.open(DataLogFile, FILE_WRITE);
-
-  // if the file is available, write to it:
-  if (logFile)
-  {
-    logFile.println(messageDate);
-    logFile.close();
+   if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END)) {
+   // sd.errorHalt("opening test.txt for write failed");
   }
-  else
-  {
-    // Serial.println(("E ") + (String)DataLogFile);
-  }
+  
+  logFile.println(messageDate);
+  logFile.close();
 #endif
 
   // Serial.println(message);
