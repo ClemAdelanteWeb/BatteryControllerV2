@@ -2,15 +2,21 @@
 #include <SPI.h>
 #include "AltSoftSerial.h"
 
-//#include "SoftwareSerial.h"
+#include "SoftwareSerial.h"
 #include "Thread.h"
 #include "BlueSeaLatchingRelay.h"
 #include "ADS1X15.h"
-#include "SD.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
 #define IS_RTC 1
+
+#define IS_SDCARD 1
+
+// Utilisation de serial
 #define IS_SERIAL 0
+
+// Définit la date dans le module RTC
+#define SET_DATE 0
 
 //------
 // SETTINGS
@@ -79,15 +85,16 @@ const byte ChargeRelayClosePin = 4; //4
 const byte ChargeRelayOpenPin = 5;  //5
 const byte ChargeRelayStatePin = A6;
 
-const byte BuzzerPin = 7;
-
 // if pin = 1, BMV infos are collected
 const byte ActivateBmvSerialPin = A3;
 
 const byte ThermistorSensorPin = A0;
 
-const byte RS485PinRx = 2;
-const byte RS485PinTx = 3;
+const byte RS485PinRx = 3;
+const byte RS485PinTx = 2;
+const byte RS485PinDE = 7;
+
+const int CANSPIPin = 2;
 
 const byte ChargingStatusOutputPin = 6;
 
@@ -101,23 +108,34 @@ const int cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-  0.1780487,
-  0.2142193,
-  0.4980978,
-  0.5896120
-};
+    0.1780487,
+    0.2142193,
+    0.4980978,
+    0.5896120};
 
 // LOGGING Params
 #if IS_RTC
-#include "RTClib.h"
-
+#include <TimeLib.h>
+#include <DS1307RTC.h>
 // RTC date time module
-RTC_DS1307 rtc;
+tmElements_t tm;
+
+#if SET_DATE
+const char *monthName[12] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+#endif;
 #endif
 
 // Log on SD Card
+
+#if IS_SDCARD
+#include "SD.h"
+
 uint8_t SDCardPinSelect = 10;
 const char *DataLogFile = "log3.txt";
+File logFile;
+#endif
 
 //------
 // Temperature sensor settings
@@ -145,7 +163,7 @@ const byte TemperatureMinChargeReset = 5; // valeur à partir de laquelle on aut
 AltSoftSerial Bmv;
 
 // RS485 communication
- // SoftwareSerial RS485(RS485PinRx, RS485PinTx); // RX, TX
+SoftwareSerial RS485(RS485PinRx, RS485PinTx);
 
 Thread RunApplication = Thread();
 
@@ -215,26 +233,33 @@ boolean newData = false;
 // Temperature
 int BatteryTemperature;
 
-// SD Card
-File logFile;
-
 String MessageTemp;
 
 byte isfirstrun = 1;
-const char* ValuesSpacer = "/";
+const char *ValuesSpacer = "/";
 int i;
 
-void logData(String message, byte buzz, int buzzperiode = 100);
-void logDataMessNum(int num, String values = "", byte buzz = 0, int buzzperiode = 100);
+void logData(String message, byte nivel = 0);
+void logDataMessNum(int num, String values = "", byte nivel = 0);
+
 String getDateTime();
+
+#if IS_SERIAL
 void printStatus();
+#endif
+
+void printRS485Status();
 int getMaxCellVoltageDifference();
 uint16_t getAdsBatteryVoltage();
 void run();
 
+#if SET_DATE
+bool getTime(const char *str);
+bool getDate(const char *str);
+#endif
+
 void setup()
 {
-
   pinMode(LoadRelayClosePin, OUTPUT);
   pinMode(LoadRelayOpenPin, OUTPUT);
   pinMode(ChargeRelayClosePin, OUTPUT);
@@ -243,7 +268,6 @@ void setup()
   pinMode(LoadRelayStatePin, INPUT_PULLUP);
 
   pinMode(ActivateBmvSerialPin, INPUT);
-  pinMode(BuzzerPin, OUTPUT);
 
   // Pour la lecture de la température
   analogReference(EXTERNAL);
@@ -261,12 +285,17 @@ void setup()
   ChargeRelay.statePin = ChargeRelayStatePin;
   ChargeRelay.delayBeforeOpening = delayBeforeChargeOpening;
 
-  // Serial.begin(19200); // fonctionnait sur la v2 à cette vitesse
-  #if IS_SERIAL
+// Serial.begin(19200); // fonctionnait sur la v2 à cette vitesse
+#if IS_SERIAL
   Serial.begin(19200);
-  #endif
+#endif
 
   Bmv.begin(19200); // Victron Baudrate = 19200
+
+  RS485.begin(19200);
+
+  pinMode(RS485PinDE, OUTPUT);
+  digitalWrite(RS485PinDE, LOW); // receiving mode
 
   RunApplication.onRun(run);
   RunApplication.setInterval(1000); // 10 sec
@@ -277,30 +306,37 @@ void setup()
   ADS.setDataRate(6); // vitesse de mesure de 1 à 7
   ADS.readADC(0);     // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 
+#if IS_SDCARD
   // Initialisation Carte SD
-   if (!SD.begin(SDCardPinSelect)) {
-     // Serial.println(F("sdcard wait"));
-     while (1);
-   }
-
-#if IS_RTC
-  if (! rtc.begin()) {
-    #if IS_SERIAL
-    Serial.println(F("Couldn't find RTC"));
-   #endif
-
-   while (1);
- }
-  if (!rtc.isrunning())
+  if (!SD.begin(SDCardPinSelect))
   {
-    #if IS_SERIAL
-     Serial.println(F("RTC NOT running"));
-     #endif
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // Serial.println(F("sdcard wait"));
+    while (1)
+      ;
   }
 #endif
 
-   // Serial.println(F("END STP"));
+#if IS_RTC
+
+#if SET_DATE
+  bool parse = false;
+  bool config = false;
+  // get the date and time the compiler was run
+  if (getDate(__DATE__) && getTime(__TIME__))
+  {
+    parse = true;
+    // and configure the RTC with this info
+    if (RTC.write(tm))
+    {
+      config = true;
+    }
+  }
+
+#endif
+
+#endif
+
+  // Serial.println(F("END STP"));
 }
 
 // Enregistrement de toutes les tensions des cellules
@@ -417,14 +453,14 @@ void readBmvData()
     if (cBmv == '\n')
     {
       // Serial.println(V_buffer);
-      if (V_buffer.startsWith("SOC"))
+      if (V_buffer.startsWith(F("SOC")))
       {
         String temp_string = V_buffer.substring(V_buffer.indexOf("\t") + 1);
         SOCTemp = temp_string.toInt();
       }
 
       // end of serie
-      if (V_buffer.startsWith("Checksum"))
+      if (V_buffer.startsWith(F("Checksum")))
       {
 
         byte result = checksum % 256;
@@ -446,16 +482,6 @@ void readBmvData()
   }
 }
 
-/**
-   Trigger Buzzer
-*/
-void bip(int duration)
-{
-  digitalWrite(BuzzerPin, HIGH);
-  delay(duration);
-  digitalWrite(BuzzerPin, LOW);
-}
-
 // Check if SOC Value is valid
 boolean isSOCValid()
 {
@@ -467,31 +493,34 @@ boolean isSOCValid()
   return false;
 }
 
+#if IS_SDCARD
 void readSDCard()
 {
-   logFile = SD.open(DataLogFile);
-  
-   // if the file is available, write to it:
-   if (logFile) {
-     while (logFile.available()) {
-       #if IS_SERIAL
-       Serial.write(logFile.read());
-       #endif
-     }
-  
-     logFile.close();
-   } else {
-     // Serial.println("No SD card File");
-   }
+  logFile = SD.open(DataLogFile);
+
+  // if the file is available, write to it:
+  if (logFile)
+  {
+    while (logFile.available())
+    {
+#if IS_SERIAL
+      Serial.write(logFile.read());
+#endif
+    }
+
+    logFile.close();
+  }
+  else
+  {
+    // Serial.println("No SD card File");
+  }
 }
 
-void deleteFile() 
+void deleteFile()
 {
-   SD.remove("log.txt");
-   SD.remove("log2.txt");
-   SD.remove("log3.txt");
+  SD.remove(DataLogFile);
 }
-
+#endif
 // Return battery temperature
 // average of 5 samples
 int getBatteryTemperature()
@@ -530,37 +559,37 @@ int getBatteryTemperature()
   return degrees;
 }
 
-void logDataMessNum(int num, String values, byte buzz, int buzzperiode)
+void logDataMessNum(int num, String values, byte nivel)
 {
   String MessageLog;
-  MessageLog = ("#");
-  MessageLog += (String) num;
-  MessageLog += (";");
+  MessageLog += F("#");
+  MessageLog += (String)num;
+  MessageLog += F(";");
   MessageLog += values;
 
-  logData(MessageLog, buzz, buzzperiode);
+  logData(MessageLog, nivel);
 }
 
 // Enregistre les messages sur la carte SD
-void logData(String message, byte buzz, int buzzperiode)
+void logData(String message, byte nivel = 0)
 {
+#if IS_SDCARD
   String messageDate = getDateTime() + F(" ") + message;
 
   // Open Datalog file on SD Card
-    logFile = SD.open(DataLogFile, FILE_WRITE);
-  
-   // if the file is available, write to it:
-   if (logFile) {
-     logFile.println(messageDate);
-     logFile.close();
-   } else {
-     // Serial.println(("E ") + (String)DataLogFile);
-     // bip(50);
-     //delay(200);
-     // bip(5000);
-   }
+  logFile = SD.open(DataLogFile, FILE_WRITE);
 
-
+  // if the file is available, write to it:
+  if (logFile)
+  {
+    logFile.println(messageDate);
+    logFile.close();
+  }
+  else
+  {
+    // Serial.println(("E ") + (String)DataLogFile);
+  }
+#endif
 
   // Serial.println(message);
   //  Serial.println(F("-"));
@@ -570,14 +599,15 @@ String getDateTime()
 {
 #if IS_RTC
   // Serial.println("getDateTime");
-  DateTime now = rtc.now();
   char heure[10];
+  if (RTC.read(tm))
+  {
 
-  // Affiche l'heure courante retournee par le module RTC
-  // Note : le %02d permet d'afficher les chiffres sur 2 digits (01, 02, ....)
-  //ex : "2021/12/08 18:12:20"
-  sprintf(heure, "%4d\/%02d\/%02d %02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
-
+    // Affiche l'heure courante retournee par le module RTC
+    // Note : le %02d permet d'afficher les chiffres sur 2 digits (01, 02, ....)
+    //ex : "2021/12/08 18:12:20"
+    sprintf(heure, "%4d\/%02d\/%02d %02d:%02d:%02d", tmYearToCalendar(tm.Year), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
+  }
   // Serial.println(heure);
   return heure;
 #else
@@ -606,80 +636,28 @@ void printParams()
   // Serial.println(outputParams);
 }
 
-// Receiving Serial commands
-void readSerialData()
+void handleRs485()
 {
-
-  static byte ndx2 = 0;
-  char endMarker2 = '\n';
-  char rc2;
-
-  while (Serial.available() > 0 && newData == false)
+  while (RS485.available() > 0)
   {
-    rc2 = Serial.read();
+    char incomingCharacter = RS485.read();
 
-    if (rc2 != endMarker2)
+    switch (incomingCharacter)
     {
-      receivedChars[ndx2] = rc2;
-      ndx2++;
-      if (ndx2 >= numChars)
-      {
-        ndx2 = numChars - 1;
-      }
-    }
-    else
-    {
-      receivedChars[ndx2] = '\0'; // terminate the string
-      ndx2 = 0;
-      newData = true;
-    }
-  }
-}
-
-void checkCommands()
-{
-  if (newData == true)
-  {
-    //Serial.print(F("Rcv : "));
-    Serial.println(receivedChars);
-
-    if (strcmp(receivedChars, "l") == 0)
-    {
+    case '0':
+      printRS485Status();
+      break;
+    case '1':
+#if IS_SDCARD
       readSDCard();
-    }
-    if (strcmp(receivedChars, "d") == 0)
-    {
+#endif
+      break;
+    case '9':
+#if IS_SDCARD
       deleteFile();
+#endif
+      break;
     }
-    // else if (strcmp(receivedChars, "s") == 0)
-    // {
-    //   printStatus();
-    // }
-    // else if (strcmp(receivedChars, "t") == 0)
-    // {
-    //   Serial.println(getBatteryTemperature());
-    // }
-    // else if (strcmp(receivedChars, "p") == 0)
-    // {
-    //   printParams();
-    // }
-    // else if (strcmp(receivedChars, "a") == 0)
-    // {
-    //   checkCellsVoltage();
-    // }
-    // else if (strcmp(receivedChars, "i") == 0)
-    // {
-    //    // MessageTemp = (String)SOCCurrent + F("/") + (String)SOCMinReset;
-        
-    //     logDataMessNum(19, F("monM"), 0);
-    //     logData(F("messM2"), 0);
-
-    // }
-    // else if(strcmp(receivedChars, "w")) {
-    //     SD.remove("l.txt");
-    // }
-
-    newData = false;
   }
 }
 
@@ -758,9 +736,64 @@ int getMaxCellVoltageDifference()
   return maxValue - minValue;
 }
 
-void printStatus()
+void printRS485Status()
 {
 
+  digitalWrite(RS485PinDE, HIGH);
+  RS485.print(getBatteryVoltage());
+  RS485.print(F(";"));
+  RS485.print(getBatteryTemperature());
+  RS485.print(F(";"));
+  RS485.print(getBatterySOC());
+  RS485.print(F("  "));
+  // Cells
+  RS485.print(getAdsCellVoltage(0));
+  RS485.print(F(";"));
+  RS485.print(getAdsCellVoltage(1));
+  RS485.print(F(";"));
+  RS485.print(getAdsCellVoltage(2));
+  RS485.print(F(";"));
+  RS485.print(getAdsCellVoltage(3));
+  RS485.print(F(";"));
+  RS485.print(getMaxCellVoltageDifference());
+  RS485.print(F("  "));
+  //Relais
+  RS485.print(ChargeRelay.getState());
+  RS485.print(F(";"));
+  RS485.print(LoadRelay.getState());
+  RS485.print(F("  "));
+
+  //SOC Infos
+  RS485.print(SOCChargeCycling);
+  RS485.print(F(";"));
+  RS485.print(SOCDischargeCycling);
+  RS485.print(F(";"));
+  RS485.print(isEnabledBMVSerialInfos());
+  RS485.print(F(";"));
+  RS485.print(isUseBMVSerialInfos());
+  RS485.print(F("  "));
+  RS485.print(ChargeRelay.waitingForOpening);
+  RS485.print(F("  "));
+
+  // HIGH / LOW voltage / LOW T°
+  RS485.print(LowVoltageDetected);
+  RS485.print(F(";"));
+  RS485.print(HighVoltageDetected);
+  RS485.print(F(";"));
+  RS485.print(CellsDifferenceDetected);
+  RS485.print(F(";"));
+  RS485.print(CellVoltageMinDetected);
+  RS485.print(F(";"));
+  RS485.print(CellVoltageMaxDetected);
+  RS485.print(F(";"));
+  RS485.print((int)+LowBatteryTemperatureDetected);
+  RS485.println();
+  digitalWrite(RS485PinDE, LOW);
+}
+
+#if IS_SERIAL
+void printStatus()
+{
 
   //char output[36];
 
@@ -802,58 +835,56 @@ void printStatus()
 
   // version 2
 
-
   Serial.print(getBatteryVoltage());
-   Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(getBatteryTemperature());
- Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(getBatterySOC());
   Serial.print(F("  "));
   // Cells
   Serial.print(getAdsCellVoltage(0));
- Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(1));
- Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(2));
- Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(getAdsCellVoltage(3));
   Serial.print(F(";"));
   Serial.print(getMaxCellVoltageDifference());
-Serial.print(F("  "));
+  Serial.print(F("  "));
   //Relais
   Serial.print(ChargeRelay.getState());
   Serial.print(F(";"));
   Serial.print(LoadRelay.getState());
   Serial.print(F("  "));
 
-
   //SOC Infos
   Serial.print(SOCChargeCycling);
-   Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(SOCDischargeCycling);
-   Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(isEnabledBMVSerialInfos());
   Serial.print(F(";"));
   Serial.print(isUseBMVSerialInfos());
- Serial.print(F("  "));
- Serial.print(ChargeRelay.waitingForOpening);
+  Serial.print(F("  "));
+  Serial.print(ChargeRelay.waitingForOpening);
   Serial.print(F("  "));
 
   // HIGH / LOW voltage / LOW T°
   Serial.print(LowVoltageDetected);
- Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(HighVoltageDetected);
-   Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(CellsDifferenceDetected);
   Serial.print(F(";"));
   Serial.print(CellVoltageMinDetected);
-   Serial.print(F(";"));
+  Serial.print(F(";"));
   Serial.print(CellVoltageMaxDetected);
   Serial.print(F(";"));
   Serial.print((int)+LowBatteryTemperatureDetected);
   Serial.println();
-
 }
+#endif
 
 void loop()
 {
@@ -863,19 +894,16 @@ void loop()
     isfirstrun = 0;
     // première lecture des tensions
     checkCellsVoltage();
-    
-    #if IS_SERIAL
-      printStatus();
-    #endif
+
+#if IS_SERIAL
+    printStatus();
+#endif
     // Serial.println(F("first run"));
 
     // pour éviter d'avoir un SOC à 0 au lancement du programe
     SOC = 500;
     SOCUpdatedTime = millis();
     logData(F("Start"), 0);
-
-    // BIP au démarrage
-    bip(250);
   }
 
   // Collecte des infos Victron BMV702 si bouton ON
@@ -884,14 +912,7 @@ void loop()
     readBmvData();
   }
 
-#if IS_SERIAL
-  // Serial commandes buffering
-  readSerialData();
-
-  // check for new command
-  checkCommands();
-#endif
-
+  handleRs485();
 
   if (RunApplication.shouldRun())
   {
@@ -911,10 +932,12 @@ void run()
   // Va rechercher les valeurs des cellules pour cette boucle
   checkCellsVoltage();
 
-  // affichage du status
-  #if IS_SERIAL
+// affichage du status
+#if IS_SERIAL
   printStatus();
-  #endif
+#endif
+
+  printRS485Status();
 
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
@@ -1409,3 +1432,38 @@ void run()
     digitalWrite(ChargingStatusOutputPin, 1);
   }
 }
+
+#if SET_DATE
+bool getTime(const char *str)
+{
+  int Hour, Min, Sec;
+
+  if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3)
+    return false;
+  tm.Hour = Hour;
+  tm.Minute = Min;
+  tm.Second = Sec;
+  return true;
+}
+
+bool getDate(const char *str)
+{
+  char Month[12];
+  int Day, Year;
+  uint8_t monthIndex;
+
+  if (sscanf(str, "%s %d %d", Month, &Day, &Year) != 3)
+    return false;
+  for (monthIndex = 0; monthIndex < 12; monthIndex++)
+  {
+    if (strcmp(Month, monthName[monthIndex]) == 0)
+      break;
+  }
+  if (monthIndex >= 12)
+    return false;
+  tm.Day = Day;
+  tm.Month = monthIndex + 1;
+  tm.Year = CalendarYrToTm(Year);
+  return true;
+}
+#endif
