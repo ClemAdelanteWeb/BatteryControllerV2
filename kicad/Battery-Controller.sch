@@ -140,32 +140,8 @@ Text GLabel 7200 4700 2    50   Input ~ 0
 SDA
 Text GLabel 7200 4800 2    50   Input ~ 0
 SCL
-$Comp
-L Device:Buzzer BZ1
-U 1 1 61B2EC2C
-P 6150 7900
-F 0 "BZ1" H 6155 7575 50  0000 C CNN
-F 1 "Buzzer" H 6155 7666 50  0000 C CNN
-F 2 "Buzzer_Beeper:Buzzer_12x9.5RM7.6" V 6125 8000 50  0001 C CNN
-F 3 "~" V 6125 8000 50  0001 C CNN
-	1    6150 7900
-	-1   0    0    1   
-$EndComp
-Text GLabel 6800 7800 2    50   Input ~ 0
-UP-D7
 Text GLabel 6200 4400 0    50   Input ~ 0
 D7
-$Comp
-L Switch:SW_DPST_x2 SW1
-U 1 1 61B4152C
-P 6550 7800
-F 0 "SW1" H 6550 8035 50  0000 C CNN
-F 1 "SW_DPST_x2" H 6550 7944 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 6550 7800 50  0001 C CNN
-F 3 "~" H 6550 7800 50  0001 C CNN
-	1    6550 7800
-	1    0    0    -1  
-$EndComp
 $Comp
 L Transistor_BJT:TIP120 Q1
 U 1 1 61B48AE2
@@ -213,16 +189,6 @@ Wire Wire Line
 	6850 6500 6850 6650
 Text GLabel 6850 5750 2    50   Input ~ 0
 CHARGING-STATUS
-Wire Notes Line
-	7200 8250 5900 8250
-Wire Notes Line
-	5900 8250 5900 7300
-Wire Notes Line
-	5900 7300 7200 7300
-Wire Notes Line
-	7200 7300 7200 8250
-Text Notes 6850 8200 0    50   ~ 0
-Buzzer\n
 Text Notes 11350 8800 0    50   ~ 0
 LOAD relay\n
 Text Notes 11350 6400 0    50   ~ 0
@@ -477,16 +443,16 @@ UP-D2
 Wire Wire Line
 	3600 7400 3600 7350
 Wire Wire Line
-	4200 7350 3600 7350
+	4200 7350 4050 7350
 Connection ~ 3600 7350
 Text GLabel 3900 7850 2    50   Input ~ 0
-RS-485-OUT1
+RS-485-TX
 Text GLabel 3900 7950 2    50   Input ~ 0
-RS-485-OUT2
+RS-485-RX
 Text GLabel 9900 1650 0    50   Input ~ 0
-RS-485-OUT1
+RS-485-RX
 Text GLabel 9900 1750 0    50   Input ~ 0
-RS-485-OUT2
+RS-485-TX
 Text Notes 4100 8450 0    50   ~ 0
 RS-485 BUS
 Wire Notes Line
@@ -598,12 +564,6 @@ Text GLabel 9900 1950 0    50   Input ~ 0
 CHARGE-RELAY-STATUS
 Text GLabel 9900 2050 0    50   Input ~ 0
 LOAD-RELAY-STATUS
-Wire Wire Line
-	6400 8000 6250 8000
-Wire Wire Line
-	6250 7800 6350 7800
-Wire Wire Line
-	6800 7800 6750 7800
 Text GLabel 9900 2550 0    50   Input ~ 0
 SOC-ENABLE
 Text GLabel 1350 8400 0    50   Input ~ 0
@@ -791,38 +751,6 @@ F 3 "" H 2800 4900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND2 #PWR0126
-U 1 1 6214F46F
-P 3650 9550
-F 0 "#PWR0126" H 3650 9300 50  0001 C CNN
-F 1 "GND2" H 3655 9377 50  0000 C CNN
-F 2 "" H 3650 9550 50  0001 C CNN
-F 3 "" H 3650 9550 50  0001 C CNN
-	1    3650 9550
-	1    0    0    -1  
-$EndComp
-Text GLabel 3400 9550 0    50   Input ~ 0
-TUP-01
-Wire Wire Line
-	3400 9550 3650 9550
-Text GLabel 3400 9350 0    50   Input ~ 0
-TUP-02
-$Comp
-L power:+5VD #PWR0127
-U 1 1 621617F9
-P 3650 9300
-F 0 "#PWR0127" H 3650 9150 50  0001 C CNN
-F 1 "+5VD" H 3665 9473 50  0000 C CNN
-F 2 "" H 3650 9300 50  0001 C CNN
-F 3 "" H 3650 9300 50  0001 C CNN
-	1    3650 9300
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3650 9300 3650 9350
-Wire Wire Line
-	3650 9350 3400 9350
-$Comp
 L power:GND2 #PWR0136
 U 1 1 621804D7
 P 1850 6350
@@ -833,21 +761,6 @@ F 3 "" H 1850 6350 50  0001 C CNN
 	1    1850 6350
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:+3.3VA #PWR0139
-U 1 1 6218958A
-P 3700 10200
-F 0 "#PWR0139" H 3700 10050 50  0001 C CNN
-F 1 "+3.3VA" H 3715 10373 50  0000 C CNN
-F 2 "" H 3700 10200 50  0001 C CNN
-F 3 "" H 3700 10200 50  0001 C CNN
-	1    3700 10200
-	1    0    0    -1  
-$EndComp
-Text GLabel 3400 10200 0    50   Input ~ 0
-TUP-02
-Wire Wire Line
-	3400 10200 3700 10200
 $Comp
 L power:GND2 #PWR0141
 U 1 1 621A2E7B
@@ -954,17 +867,6 @@ Text GLabel 13450 1150 0    50   Input ~ 0
 UP-5V
 Text GLabel 14000 1150 2    50   Input ~ 0
 5V
-$Comp
-L power:GND2 #PWR0102
-U 1 1 627A7DEA
-P 6400 8000
-F 0 "#PWR0102" H 6400 7750 50  0001 C CNN
-F 1 "GND2" H 6405 7827 50  0000 C CNN
-F 2 "" H 6400 8000 50  0001 C CNN
-F 3 "" H 6400 8000 50  0001 C CNN
-	1    6400 8000
-	1    0    0    -1  
-$EndComp
 Text GLabel 14000 2150 2    50   Input ~ 0
 D7
 Text GLabel 13450 2150 0    50   Input ~ 0
@@ -1510,4 +1412,59 @@ Wire Wire Line
 	9400 8250 9300 8250
 Text GLabel 7200 4100 2    50   Input ~ 0
 3.3V
+$Comp
+L Battery-Controller-rescue:Arduino_Nano_v3.x-MCU_Module Arduino2
+U 1 1 61D0DBA8
+P 14950 6750
+F 0 "Arduino2" H 14950 5661 50  0000 C CNN
+F 1 "Arduino_Nano_v3.x" H 14950 5570 50  0000 C CNN
+F 2 "Module:Arduino_Nano" H 15100 5800 50  0001 L CNN
+F 3 "http://www.mouser.com/pdfdocs/Gravitech_Arduino_Nano3_0.pdf" H 14950 5750 50  0001 C CNN
+	1    14950 6750
+	1    0    0    -1  
+$EndComp
+Connection ~ 4050 7350
+Wire Wire Line
+	4050 7350 3600 7350
+$Comp
+L Device:CP C?
+U 1 1 61D104DE
+P 4050 7500
+F 0 "C?" H 4168 7546 50  0000 L CNN
+F 1 "1.5uF" H 4168 7455 50  0000 L CNN
+F 2 "Capacitor_THT:C_Disc_D8.0mm_W5.0mm_P7.50mm" H 4088 7350 50  0001 C CNN
+F 3 "~" H 4050 7500 50  0001 C CNN
+	1    4050 7500
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND2 #PWR?
+U 1 1 61D14DB0
+P 4550 7650
+F 0 "#PWR?" H 4550 7400 50  0001 C CNN
+F 1 "GND2" H 4555 7477 50  0000 C CNN
+F 2 "" H 4550 7650 50  0001 C CNN
+F 3 "" H 4550 7650 50  0001 C CNN
+	1    4550 7650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4550 7650 4050 7650
+Text GLabel 3300 7550 0    50   Input ~ 0
+UP-D7
+$Comp
+L power:GND2 #PWR?
+U 1 1 61D19D1C
+P 3150 8150
+F 0 "#PWR?" H 3150 7900 50  0001 C CNN
+F 1 "GND2" H 3155 7977 50  0000 C CNN
+F 2 "" H 3150 8150 50  0001 C CNN
+F 3 "" H 3150 8150 50  0001 C CNN
+	1    3150 8150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3150 8150 3150 7850
+Wire Wire Line
+	3150 7850 3300 7850
 $EndSCHEMATC
