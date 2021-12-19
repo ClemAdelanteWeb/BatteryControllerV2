@@ -34,7 +34,7 @@ class BlueSeaLatchingRelay {
     bool waitingForOpening = false;
     
     // Name of the Relay, usefull for logs
-    String name;
+    char name[3];
     
     // Opening or closing time in ms
     int latchingDurationTime = 600;

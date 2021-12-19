@@ -79,13 +79,13 @@ const unsigned int delayBeforeChargeOpening = 5000;
 // PINS PARAMS
 const byte LoadRelayClosePin = A1; // A1
 const byte LoadRelayOpenPin = A2;  //A2
-const byte LoadRelayStatePin = A7;
+const byte LoadRelayStatePin = A7; //A7
 
 const byte ChargeRelayClosePin = 4; //4
 const byte ChargeRelayOpenPin = 5;  //5
-const byte ChargeRelayStatePin = A6;
+const byte ChargeRelayStatePin = A6; //A6
 
-// if pin = 1, BMV infos are collected
+// if pin HIGH, BMV infos are collected
 const byte ActivateBmvSerialPin = A3;
 
 const byte ThermistorSensorPin = A0;
@@ -94,15 +94,13 @@ const byte RS485PinRx = 3;
 const byte RS485PinTx = 2;
 const byte RS485PinDE = 7;
 
-const int CANSPIPin = 2;
-
 const byte ChargingStatusOutputPin = 6;
 
 // END PINS PARAMS
 //------
 
 // Number of cells in the battery
-const int cellsNumber = 4;
+const byte cellsNumber = 4;
 
 // ADS1115 Calibration at 10v *1000
 // Ex: 10 / 18107 = 0,000552273
@@ -119,12 +117,12 @@ const float adc_calibration[cellsNumber] = {
 #include <DS1307RTC.h>
 // RTC date time module
 tmElements_t tm;
+#endif
 
 #if SET_DATE
 const char *monthName[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-#endif;
 #endif
 
 // Log on SD Card
@@ -135,7 +133,7 @@ SdFat sd;
 SdFile logFile;
 
 uint8_t SDCardPinSelect = 10;
-const char *DataLogFile = "log3.txt";
+#define DataLogFile "log5.txt"
 #endif
 
 //------
@@ -237,7 +235,9 @@ int BatteryTemperature;
 String MessageTemp;
 
 byte isfirstrun = 1;
-const char *ValuesSpacer = "/";
+
+#define ValuesSpacer F("/")
+//static const char ValuesSpacer[] = F("/");
 int i;
 
 void logData(String message, byte nivel = 0);
@@ -274,13 +274,13 @@ void setup()
   analogReference(EXTERNAL);
 
   // Load Relay declaration
-  LoadRelay.name = "LR";
+ // LoadRelay.name = F("LR");
   LoadRelay.openPin = LoadRelayOpenPin;
   LoadRelay.closePin = LoadRelayClosePin;
   LoadRelay.statePin = LoadRelayStatePin;
 
   // Charge Relay declaration
-  ChargeRelay.name = "ChR";
+ // ChargeRelay.name = F("ChR");
   ChargeRelay.openPin = ChargeRelayOpenPin;
   ChargeRelay.closePin = ChargeRelayClosePin;
   ChargeRelay.statePin = ChargeRelayStatePin;
@@ -309,7 +309,7 @@ void setup()
 
 #if IS_SDCARD
   // Initialisation Carte SD
-  if (!sd.begin(SDCardPinSelect, SPI_HALF_SPEED)) 
+  if (!sd.begin(SDCardPinSelect)) 
     sd.initErrorHalt();
 #endif
 
@@ -340,7 +340,7 @@ void setup()
 void checkCellsVoltage()
 {
   unsigned long averageCell;
-  int iCell, iTemp2;
+  byte iCell, iTemp2;
   uint16_t vTemp;
 
   for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
@@ -520,7 +520,7 @@ void deleteFile()
 int getBatteryTemperature()
 {
 
-  int iTemp3;
+  byte iTemp3;
   //-----
   float averageTemperature = 0;
 
@@ -695,7 +695,7 @@ int getMaxCellVoltageDifference()
   unsigned int minValue = 0;
   unsigned int maxValue = 0;
   unsigned int tempCellV = 0;
-  int iTemp4;
+  byte iTemp4;
 
   for (iTemp4 = (cellsNumber - 1); iTemp4 >= 0; iTemp4--)
   {
@@ -1286,8 +1286,8 @@ void run()
 
   //
   // checking for Individual cell voltage detection
-  int i;
-  int cellVoltage;
+  byte i;
+  unsigned int cellVoltage;
   for (i = (cellsNumber - 1); i >= 0; i--)
   {
     if (i > 0)
