@@ -10,10 +10,12 @@
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
 #define IS_RTC 1
 
-#define IS_SDCARD 1
+#define IS_SDCARD 0
 
 // Utilisation de serial
-#define IS_SERIAL 0
+#define IS_SERIAL 1
+
+#define IS_RS485 0
 
 // Définit la date dans le module RTC
 #define SET_DATE 0
@@ -68,7 +70,7 @@ const int CellsDifferenceMaxLimit = 500;
 // Voltage difference maximum to considere that the battery bank can be starting using again
 // in mV
 // default 250
-const int CellsDifferenceMaxReset = 400;
+const int CellsDifferenceMaxReset = 450;
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -81,8 +83,8 @@ const byte LoadRelayClosePin = A1; // A1
 const byte LoadRelayOpenPin = A2;  //A2
 const byte LoadRelayStatePin = A7; //A7
 
-const byte ChargeRelayClosePin = 4; //4
-const byte ChargeRelayOpenPin = 5;  //5
+const byte ChargeRelayClosePin = 4;  //4
+const byte ChargeRelayOpenPin = 5;   //5
 const byte ChargeRelayStatePin = A6; //A6
 
 // if pin HIGH, BMV infos are collected
@@ -161,8 +163,10 @@ const byte TemperatureMinChargeReset = 5; // valeur à partir de laquelle on aut
 // RX pin 8 Tx pin 9 for Serial Victron BMV communication
 AltSoftSerial Bmv;
 
+#if IS_RS485
 // RS485 communication
 SoftwareSerial RS485(RS485PinRx, RS485PinTx);
+#endif
 
 Thread RunApplication = Thread();
 
@@ -274,13 +278,13 @@ void setup()
   analogReference(EXTERNAL);
 
   // Load Relay declaration
- // LoadRelay.name = F("LR");
+  // LoadRelay.name = F("LR");
   LoadRelay.openPin = LoadRelayOpenPin;
   LoadRelay.closePin = LoadRelayClosePin;
   LoadRelay.statePin = LoadRelayStatePin;
 
   // Charge Relay declaration
- // ChargeRelay.name = F("ChR");
+  // ChargeRelay.name = F("ChR");
   ChargeRelay.openPin = ChargeRelayOpenPin;
   ChargeRelay.closePin = ChargeRelayClosePin;
   ChargeRelay.statePin = ChargeRelayStatePin;
@@ -293,27 +297,28 @@ void setup()
 
   Bmv.begin(19200); // Victron Baudrate = 19200
 
-  RS485.begin(19200);
-
+#if IS_RS485
+  RS485.begin(38400);
   pinMode(RS485PinDE, OUTPUT);
   digitalWrite(RS485PinDE, LOW); // receiving mode
+#endif
 
   RunApplication.onRun(run);
   RunApplication.setInterval(1000); // 10 sec
 
   ADS.begin();
-  ADS.setGain(0);     // 6.144 volt
+  ADS.setGain(0);     // 4V volt
   ADS.setMode(1);     // mesures à la demande
-  ADS.setDataRate(6); // vitesse de mesure de 1 à 7
+  ADS.setDataRate(5); // vitesse de mesure de 1 à 7
   ADS.readADC(0);     // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 
 #if IS_SDCARD
   // Initialisation Carte SD
-  if (!sd.begin(SDCardPinSelect)) 
-    sd.initErrorHalt();
+  if (!sd.begin(SDCardPinSelect))
+  {
+    // sd.initErrorHalt();
+  }
 #endif
-
-#if IS_RTC
 
 #if SET_DATE
   bool parse = false;
@@ -331,6 +336,8 @@ void setup()
 
 #endif
 
+#if IS_SERIAL
+  Serial.println(F("STP END"));
 #endif
 
   // Serial.println(F("END STP"));
@@ -340,7 +347,8 @@ void setup()
 void checkCellsVoltage()
 {
   unsigned long averageCell;
-  byte iCell, iTemp2;
+  byte iTemp2;
+  int iCell; // ne pas toucher le type
   uint16_t vTemp;
 
   for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
@@ -494,14 +502,16 @@ boolean isSOCValid()
 void readSDCard()
 {
   int data;
-   if (!logFile.open(DataLogFile, O_READ)) {
-  //  sd.errorHalt("opening test.txt for read failed");
+  if (!logFile.open(DataLogFile, O_READ))
+  {
+    //  sd.errorHalt("opening test.txt for read failed");
   }
 
-  while ((data = logFile.read()) >= 0) {
-    #if IS_SERIAL
+  while ((data = logFile.read()) >= 0)
+  {
+#if IS_SERIAL
     Serial.write(data);
-    #endif
+#endif
   }
 
   // close the file:
@@ -513,7 +523,6 @@ void deleteFile()
   sd.remove(DataLogFile);
 }
 #endif
-
 
 // Return battery temperature
 // average of 5 samples
@@ -565,15 +574,16 @@ void logDataMessNum(int num, String values, byte nivel)
 }
 
 // Enregistre les messages sur la carte SD
-void logData(String message, byte nivel = 0)
+void logData(String message, byte nivel)
 {
 #if IS_SDCARD
   String messageDate = getDateTime() + F(" ") + message;
 
-   if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END)) {
-   // sd.errorHalt("opening test.txt for write failed");
+  if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END))
+  {
+    // sd.errorHalt("opening test.txt for write failed");
   }
-  
+
   logFile.println(messageDate);
   logFile.close();
 #endif
@@ -623,6 +633,7 @@ void printParams()
   // Serial.println(outputParams);
 }
 
+#if IS_RS485
 void handleRs485()
 {
   while (RS485.available() > 0)
@@ -647,6 +658,7 @@ void handleRs485()
     }
   }
 }
+#endif
 
 /**
    Detection if BMV Serial should be collected and used
@@ -695,7 +707,7 @@ int getMaxCellVoltageDifference()
   unsigned int minValue = 0;
   unsigned int maxValue = 0;
   unsigned int tempCellV = 0;
-  byte iTemp4;
+  int iTemp4; // ne pas toucher le type
 
   for (iTemp4 = (cellsNumber - 1); iTemp4 >= 0; iTemp4--)
   {
@@ -723,6 +735,7 @@ int getMaxCellVoltageDifference()
   return maxValue - minValue;
 }
 
+#if IS_RS485
 void printRS485Status()
 {
 
@@ -759,8 +772,8 @@ void printRS485Status()
   RS485.print(F(";"));
   RS485.print(isUseBMVSerialInfos());
   RS485.print(F("  "));
-  RS485.print(ChargeRelay.waitingForOpening);
-  RS485.print(F("  "));
+  //RS485.print(ChargeRelay.waitingForOpening);
+  //RS485.print(F("  "));
 
   // HIGH / LOW voltage / LOW T°
   RS485.print(LowVoltageDetected);
@@ -777,6 +790,7 @@ void printRS485Status()
   RS485.println();
   digitalWrite(RS485PinDE, LOW);
 }
+#endif
 
 #if IS_SERIAL
 void printStatus()
@@ -878,14 +892,11 @@ void loop()
 
   if (isfirstrun)
   {
+
     isfirstrun = 0;
+
     // première lecture des tensions
     checkCellsVoltage();
-
-#if IS_SERIAL
-    printStatus();
-#endif
-    // Serial.println(F("first run"));
 
     // pour éviter d'avoir un SOC à 0 au lancement du programe
     SOC = 500;
@@ -899,7 +910,10 @@ void loop()
     readBmvData();
   }
 
+#if IS_RS485
+  // listening RS485 line
   handleRs485();
+#endif
 
   if (RunApplication.shouldRun())
   {
@@ -912,19 +926,13 @@ void loop()
 */
 void run()
 {
+
   // Ne pas retirer, remet les états à appliquer à 0
   ChargeRelay.startCycle();
   LoadRelay.startCycle();
 
   // Va rechercher les valeurs des cellules pour cette boucle
   checkCellsVoltage();
-
-// affichage du status
-#if IS_SERIAL
-  printStatus();
-#endif
-
-  printRS485Status();
 
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
@@ -1286,7 +1294,7 @@ void run()
 
   //
   // checking for Individual cell voltage detection
-  byte i;
+  int i; // ne pas toucher le type
   unsigned int cellVoltage;
   for (i = (cellsNumber - 1); i >= 0; i--)
   {
@@ -1418,6 +1426,16 @@ void run()
   {
     digitalWrite(ChargingStatusOutputPin, 1);
   }
+
+  // Send status on Serial line
+#if IS_SERIAL
+  printStatus();
+#endif
+
+  // Send status on RS485 bus
+#if IS_RS485
+  printRS485Status();
+#endif
 }
 
 #if SET_DATE
