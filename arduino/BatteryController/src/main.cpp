@@ -8,7 +8,7 @@
 #include "ADS1X15.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
-#define IS_RTC 0
+#define IS_RTC 1
 
 #define IS_SDCARD 1
 
@@ -27,7 +27,7 @@
 
 // Checking cells differences
 // var boolean 1 OR 0
-const byte activateCheckingCellsVoltageDifference = 1;
+#define activateCheckingCellsVoltageDifference 0
 
 // Opening charge relay for SOC >= SOCMax
 const int SOCMax = 1000;
@@ -515,11 +515,11 @@ digitalWrite(RS485PinDE, HIGH);
   {
     
     #if IS_RS485
-    // RS485.println(F("NOSDFILE"));
+    RS485.println(F("NOSDFILE"));
     #endif
 
     #if IS_SERIAL
-    // Serial.println(F("NOSDFILE"));
+    Serial.println(F("NOSDFILE"));
     #endif
   }
 
@@ -616,10 +616,12 @@ void logData(String message, byte nivel)
   if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END))
   {
     // sd.errorHalt("opening test.txt for write failed");
+  } else {
+
+    logFile.println(messageDate);
+    logFile.close();
   }
 
-  logFile.println(messageDate);
-  logFile.close();
 #endif
 
   // Serial.println(message);
@@ -630,14 +632,14 @@ String getDateTime()
 {
 #if IS_RTC
   // Serial.println("getDateTime");
-  char heure[10];
+  char heure[19];
   if (RTC.read(tm))
   {
 
     // Affiche l'heure courante retournee par le module RTC
     // Note : le %02d permet d'afficher les chiffres sur 2 digits (01, 02, ....)
     //ex : "2021/12/08 18:12:20"
-    sprintf(heure, "%4d\/%02d\/%02d %02d:%02d:%02d", tmYearToCalendar(tm.Year), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
+    sprintf(heure, "%4d/%02d/%02d %02d:%02d:%02d", tmYearToCalendar(tm.Year), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
   }
   // Serial.println(heure);
   return heure;
@@ -646,42 +648,6 @@ String getDateTime()
 #endif
 }
 
-
-uint8_t getCheckSum(char *string)
-{
-  int XOR = 0;  
-  for (int i = 0; string[i] != '\0';  i+= 2) // <-- increment by 2
-  {
-
-    // make single byte value out of 2 characters from the string...
-    byte b1,b2,b;
-
-    // First byte: hex to bin
-    b1 = string[i];
-    if (b1 >= 'a')
-      b1 = b1 - 'a' + 10;
-    else if (b1 >= 'A')
-      b1 = b1 - 'A' + 10;
-    else
-      b1 -= '0';
-
-    // Second byte: hex to bin
-    b2 = string[i + 1];
-    if (b2 >= 'a')
-      b2 = b2 - 'a' + 10;
-    else if (b2 >= 'A')
-      b2 = b2 - 'A' + 10;
-    else
-      b2 -= '0';
-
-    // Combine the two
-    b = 0x10 * b1 + b2;
-
-    XOR = XOR ^ b;
-  }
-
-  return XOR;  
-}
 
 void printParams()
 {
@@ -722,6 +688,12 @@ void handleRs485()
       readSDCard();
 #endif
       break;
+      case '8':
+    
+#if IS_SDCARD
+      logData(F("Test"));
+#endif
+      break;
     case '9':
 #if IS_SDCARD
       deleteFile();
@@ -748,6 +720,13 @@ Serial.println(incomingCharacter);
     
 #if IS_SDCARD
       readSDCard();
+#endif
+      break;
+
+       case '8':
+    
+#if IS_SDCARD
+      logData(F("Test"));
 #endif
       break;
     case '9':
@@ -840,8 +819,8 @@ int getMaxCellVoltageDifference()
 #if IS_RS485
 void printRS485Status()
 {
-  char messageStatusBuffer[69];
-sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d;;"),
+  char messageStatusBuffer[67];
+sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -1286,8 +1265,8 @@ void run()
 
   //---
   // Checking Cells / Batteries differences
-  if (activateCheckingCellsVoltageDifference)
-  {
+  #if activateCheckingCellsVoltageDifference
+  
     CellsDifferenceMax = getMaxCellVoltageDifference();
 
     // Too much voltage difference detected
@@ -1317,7 +1296,8 @@ void run()
         }
       }
     }
-  }
+  
+  #endif
 
   //
   // checking for Individual cell voltage detection

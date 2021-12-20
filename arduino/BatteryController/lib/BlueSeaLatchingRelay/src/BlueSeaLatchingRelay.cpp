@@ -147,7 +147,7 @@ void BlueSeaLatchingRelay::applyReadyActions()
 					this->waitingForOpening = true;
 					#if DEBUGR == 1
 					Serial.println(F("Wop.."));
-					#endif;
+					#endif
 				}
 
 				// Si un compte à rebours à déjà été lancé
