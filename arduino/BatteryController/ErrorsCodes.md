@@ -20,7 +20,7 @@
 #15 SOC Current > SOC Min
 #16 Load relay closing, routine without SOC
 #17 SOC Current < SOC Max Charge relay closing
-    => can happen when forcing open Charge Relay manualy 
+    => can happen when forcing open Charge Relay manually 
 #18 SOC Charge relay closing, routine without SOC
 #19 SOC min reset reached
     values : SOCCurrent/SOCMinReset

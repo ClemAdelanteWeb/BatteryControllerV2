@@ -8,17 +8,19 @@
 #include "ADS1X15.h"
 
 // Utilisation du module RTC qui permet de logger avec l'heure réelle
-#define IS_RTC 1
+#define IS_RTC 0
 
-#define IS_SDCARD 0
+#define IS_SDCARD 1
 
 // Utilisation de serial
-#define IS_SERIAL 1
+#define IS_SERIAL 0
 
-#define IS_RS485 0
+#define IS_RS485 1
 
 // Définit la date dans le module RTC
 #define SET_DATE 0
+
+#define IS_DEBUG 0
 
 //------
 // SETTINGS
@@ -135,7 +137,7 @@ SdFat sd;
 SdFile logFile;
 
 uint8_t SDCardPinSelect = 10;
-#define DataLogFile "log5.txt"
+#define DataLogFile "log6.txt"
 #endif
 
 //------
@@ -224,7 +226,7 @@ bool CellVoltageMaxDetected = false;
 bool LowBatteryTemperatureDetected = false;
 
 // victron checksum
-byte checksum = 0;
+byte checksumBmv = 0;
 String V_buffer;
 char cBmv;
 
@@ -263,6 +265,8 @@ bool getTime(const char *str);
 bool getDate(const char *str);
 #endif
 
+
+
 void setup()
 {
   pinMode(LoadRelayClosePin, OUTPUT);
@@ -292,7 +296,7 @@ void setup()
 
 // Serial.begin(19200); // fonctionnait sur la v2 à cette vitesse
 #if IS_SERIAL
-  Serial.begin(19200);
+  Serial.begin(38400);
 #endif
 
   Bmv.begin(19200); // Victron Baudrate = 19200
@@ -447,7 +451,7 @@ void readBmvData()
   if (Bmv.available())
   {
     cBmv = Bmv.read();
-    checksum += cBmv;
+    checksumBmv += cBmv;
 
     if (V_buffer.length() < 80)
     {
@@ -468,7 +472,7 @@ void readBmvData()
       if (V_buffer.startsWith(F("Checksum")))
       {
 
-        byte result = checksum % 256;
+        byte result = checksumBmv % 256;
 
         // checksum OK
         if (result == 0)
@@ -478,7 +482,7 @@ void readBmvData()
         }
 
         // begin new serie
-        checksum = 0;
+        checksumBmv = 0;
       }
 
       // begin new line
@@ -502,17 +506,47 @@ boolean isSOCValid()
 void readSDCard()
 {
   int data;
+
+  #if IS_RS485
+digitalWrite(RS485PinDE, HIGH);
+#endif
+
   if (!logFile.open(DataLogFile, O_READ))
   {
-    //  sd.errorHalt("opening test.txt for read failed");
+    
+    #if IS_RS485
+    // RS485.println(F("NOSDFILE"));
+    #endif
+
+    #if IS_SERIAL
+    // Serial.println(F("NOSDFILE"));
+    #endif
   }
+
+#if IS_RS485
+  // RS485.println(F("SDCARD"));
+ #endif
+
+    #if IS_SERIAL
+    // Serial.println(F("SDCARD"));
+    #endif
 
   while ((data = logFile.read()) >= 0)
   {
 #if IS_SERIAL
     Serial.write(data);
 #endif
+
+#if IS_RS485
+  RS485.write(data);
+#endif
+    
+    delay(2);
   }
+
+  #if IS_RS485
+digitalWrite(RS485PinDE, LOW);
+#endif
 
   // close the file:
   logFile.close();
@@ -612,6 +646,43 @@ String getDateTime()
 #endif
 }
 
+
+uint8_t getCheckSum(char *string)
+{
+  int XOR = 0;  
+  for (int i = 0; string[i] != '\0';  i+= 2) // <-- increment by 2
+  {
+
+    // make single byte value out of 2 characters from the string...
+    byte b1,b2,b;
+
+    // First byte: hex to bin
+    b1 = string[i];
+    if (b1 >= 'a')
+      b1 = b1 - 'a' + 10;
+    else if (b1 >= 'A')
+      b1 = b1 - 'A' + 10;
+    else
+      b1 -= '0';
+
+    // Second byte: hex to bin
+    b2 = string[i + 1];
+    if (b2 >= 'a')
+      b2 = b2 - 'a' + 10;
+    else if (b2 >= 'A')
+      b2 = b2 - 'A' + 10;
+    else
+      b2 -= '0';
+
+    // Combine the two
+    b = 0x10 * b1 + b2;
+
+    XOR = XOR ^ b;
+  }
+
+  return XOR;  
+}
+
 void printParams()
 {
   // char outputParams[60];
@@ -646,6 +717,7 @@ void handleRs485()
       printRS485Status();
       break;
     case '1':
+    
 #if IS_SDCARD
       readSDCard();
 #endif
@@ -659,6 +731,35 @@ void handleRs485()
   }
 }
 #endif
+
+#if IS_SERIAL
+void handleSerial()
+{
+  while (Serial.available() > 0)
+  {
+    char incomingCharacter = Serial.read();
+Serial.println(incomingCharacter);
+    switch (incomingCharacter)
+    {
+    case '0':
+      printStatus();
+      break;
+    case '1':
+    
+#if IS_SDCARD
+      readSDCard();
+#endif
+      break;
+    case '9':
+#if IS_SDCARD
+      deleteFile();
+#endif
+      break;
+    }
+  }
+}
+#endif
+
 
 /**
    Detection if BMV Serial should be collected and used
@@ -735,59 +836,41 @@ int getMaxCellVoltageDifference()
   return maxValue - minValue;
 }
 
+
 #if IS_RS485
 void printRS485Status()
 {
+  char messageStatusBuffer[69];
+sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d;;"),
+          getBatteryVoltage(),
+          getBatteryTemperature(),
+          getBatterySOC(),
+          // vide
+          getAdsCellVoltage(0),
+          getAdsCellVoltage(1),
+          getAdsCellVoltage(2),
+          getAdsCellVoltage(3),
+          getMaxCellVoltageDifference(),
+          // vide
+          ChargeRelay.getState(),
+          LoadRelay.getState(),
+          // vide
+          SOCChargeCycling,
+          SOCDischargeCycling,
+          isEnabledBMVSerialInfos(),
+          isUseBMVSerialInfos(),
+          // vide
+          LowVoltageDetected,
+          HighVoltageDetected,
+          CellsDifferenceDetected,
+          CellVoltageMinDetected,
+          CellVoltageMaxDetected,
+          LowBatteryTemperatureDetected
+
+  );
 
   digitalWrite(RS485PinDE, HIGH);
-  RS485.print(getBatteryVoltage());
-  RS485.print(F(";"));
-  RS485.print(getBatteryTemperature());
-  RS485.print(F(";"));
-  RS485.print(getBatterySOC());
-  RS485.print(F("  "));
-  // Cells
-  RS485.print(getAdsCellVoltage(0));
-  RS485.print(F(";"));
-  RS485.print(getAdsCellVoltage(1));
-  RS485.print(F(";"));
-  RS485.print(getAdsCellVoltage(2));
-  RS485.print(F(";"));
-  RS485.print(getAdsCellVoltage(3));
-  RS485.print(F(";"));
-  RS485.print(getMaxCellVoltageDifference());
-  RS485.print(F("  "));
-  //Relais
-  RS485.print(ChargeRelay.getState());
-  RS485.print(F(";"));
-  RS485.print(LoadRelay.getState());
-  RS485.print(F("  "));
-
-  //SOC Infos
-  RS485.print(SOCChargeCycling);
-  RS485.print(F(";"));
-  RS485.print(SOCDischargeCycling);
-  RS485.print(F(";"));
-  RS485.print(isEnabledBMVSerialInfos());
-  RS485.print(F(";"));
-  RS485.print(isUseBMVSerialInfos());
-  RS485.print(F("  "));
-  //RS485.print(ChargeRelay.waitingForOpening);
-  //RS485.print(F("  "));
-
-  // HIGH / LOW voltage / LOW T°
-  RS485.print(LowVoltageDetected);
-  RS485.print(F(";"));
-  RS485.print(HighVoltageDetected);
-  RS485.print(F(";"));
-  RS485.print(CellsDifferenceDetected);
-  RS485.print(F(";"));
-  RS485.print(CellVoltageMinDetected);
-  RS485.print(F(";"));
-  RS485.print(CellVoltageMaxDetected);
-  RS485.print(F(";"));
-  RS485.print((int)+LowBatteryTemperatureDetected);
-  RS485.println();
+  RS485.println(messageStatusBuffer);
   digitalWrite(RS485PinDE, LOW);
 }
 #endif
@@ -795,95 +878,35 @@ void printRS485Status()
 #if IS_SERIAL
 void printStatus()
 {
+  char messageStatusBuffer[69];
+  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+          getBatteryVoltage(),
+          getBatteryTemperature(),
+          getBatterySOC(),
+          // vide
+          getAdsCellVoltage(0),
+          getAdsCellVoltage(1),
+          getAdsCellVoltage(2),
+          getAdsCellVoltage(3),
+          getMaxCellVoltageDifference(),
+          // vide
+          ChargeRelay.getState(),
+          LoadRelay.getState(),
+          // vide
+          SOCChargeCycling,
+          SOCDischargeCycling,
+          isEnabledBMVSerialInfos(),
+          isUseBMVSerialInfos(),
+          // vide
+          LowVoltageDetected,
+          HighVoltageDetected,
+          CellsDifferenceDetected,
+          CellVoltageMinDetected,
+          CellVoltageMaxDetected,
+          LowBatteryTemperatureDetected
 
-  //char output[36];
-
-  // affichage des données actuelles
-  //
-  //  V Batt ; T° Batt ;;
-  //  V Cell1 ; V Cell2 ; V Cell3 ; V Cell4 ; V Cell Max Diff ;;
-  //  Ch Relay Status ; Load Relay Status ;;
-  //  SOC Charge Cycling ; SOC Discharge Cycling;;
-  //  Use SOC data ; Using SOC data ? ; SOC Value ;;
-  //  Low Voltage detected ; High voltage detected
-  //$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;;%d;%d;;%d;%d#
-  // sprintf(output, "$%d;%s;%d;;%d;%d;%d;%d;;%d;%d",
-  //         getBatteryVoltage(),
-  //         getBatteryTemperature(),
-  //         getBatterySOC(),
-
-  //         getAdsCellVoltage(0),
-  //         getAdsCellVoltage(1),
-  //         getAdsCellVoltage(2),
-  //         getAdsCellVoltage(3),
-  //         // getMaxCellVoltageDifference(),
-
-  //         ChargeRelay.getState(),
-  //         LoadRelay.getState()
-
-  //        // SOCChargeCycling,
-  //        // SOCDischargeCycling
-
-  //         //  isEnabledBMVSerialInfos(),
-  //         //  isUseBMVSerialInfos(),
-
-  //         //  LowVoltageDetected,
-  //         //  HighVoltageDetected
-  // );
-  // Serial.println(output);
-  // int tempVal = getMaxVoltageTest();
-  //   int  tempVal = getMaxCellVoltageDifference();
-
-  // version 2
-
-  Serial.print(getBatteryVoltage());
-  Serial.print(F(";"));
-  Serial.print(getBatteryTemperature());
-  Serial.print(F(";"));
-  Serial.print(getBatterySOC());
-  Serial.print(F("  "));
-  // Cells
-  Serial.print(getAdsCellVoltage(0));
-  Serial.print(F(";"));
-  Serial.print(getAdsCellVoltage(1));
-  Serial.print(F(";"));
-  Serial.print(getAdsCellVoltage(2));
-  Serial.print(F(";"));
-  Serial.print(getAdsCellVoltage(3));
-  Serial.print(F(";"));
-  Serial.print(getMaxCellVoltageDifference());
-  Serial.print(F("  "));
-  //Relais
-  Serial.print(ChargeRelay.getState());
-  Serial.print(F(";"));
-  Serial.print(LoadRelay.getState());
-  Serial.print(F("  "));
-
-  //SOC Infos
-  Serial.print(SOCChargeCycling);
-  Serial.print(F(";"));
-  Serial.print(SOCDischargeCycling);
-  Serial.print(F(";"));
-  Serial.print(isEnabledBMVSerialInfos());
-  Serial.print(F(";"));
-  Serial.print(isUseBMVSerialInfos());
-  Serial.print(F("  "));
-  Serial.print(ChargeRelay.waitingForOpening);
-  Serial.print(F("  "));
-
-  // HIGH / LOW voltage / LOW T°
-  Serial.print(LowVoltageDetected);
-  Serial.print(F(";"));
-  Serial.print(HighVoltageDetected);
-  Serial.print(F(";"));
-  Serial.print(CellsDifferenceDetected);
-  Serial.print(F(";"));
-  Serial.print(CellVoltageMinDetected);
-  Serial.print(F(";"));
-  Serial.print(CellVoltageMaxDetected);
-  Serial.print(F(";"));
-  Serial.print((int)+LowBatteryTemperatureDetected);
-  Serial.println();
+  );
+   Serial.println(messageStatusBuffer);
 }
 #endif
 
@@ -913,6 +936,10 @@ void loop()
 #if IS_RS485
   // listening RS485 line
   handleRs485();
+#endif
+
+#if IS_SERIAL
+  handleSerial();
 #endif
 
   if (RunApplication.shouldRun())
@@ -1429,12 +1456,12 @@ void run()
 
   // Send status on Serial line
 #if IS_SERIAL
-  printStatus();
+  // printStatus();
 #endif
 
   // Send status on RS485 bus
 #if IS_RS485
-  printRS485Status();
+  // printRS485Status();
 #endif
 }
 
