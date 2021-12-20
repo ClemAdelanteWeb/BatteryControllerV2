@@ -20,14 +20,9 @@
 // Définit la date dans le module RTC
 #define SET_DATE 0
 
-#define IS_DEBUG 0
-
 //------
 // SETTINGS
 
-// Checking cells differences
-// var boolean 1 OR 0
-#define activateCheckingCellsVoltageDifference 0
 
 // Opening charge relay for SOC >= SOCMax
 const int SOCMax = 1000;
@@ -63,16 +58,6 @@ const int CellVoltageMin = 3100;
 // Maximum operating cell voltage
 const int CellVoltageMax = 3600;
 
-// Voltage difference between cells  or batteries
-// Absolute value (-100mV) = 100mV).
-// in mV
-// default 300
-const int CellsDifferenceMaxLimit = 500;
-
-// Voltage difference maximum to considere that the battery bank can be starting using again
-// in mV
-// default 250
-const int CellsDifferenceMaxReset = 450;
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -137,7 +122,7 @@ SdFat sd;
 SdFile logFile;
 
 uint8_t SDCardPinSelect = 10;
-#define DataLogFile "log6.txt"
+#define DataLogFile "log.txt"
 #endif
 
 //------
@@ -256,7 +241,7 @@ void printStatus();
 #endif
 
 void printRS485Status();
-int getMaxCellVoltageDifference();
+// int getMaxCellVoltageDifference();
 uint16_t getAdsBatteryVoltage();
 void run();
 
@@ -515,7 +500,7 @@ digitalWrite(RS485PinDE, HIGH);
   {
     
     #if IS_RS485
-    RS485.println(F("NOSDFILE"));
+    // RS485.println(F("NOSDFILE"));
     #endif
 
     #if IS_SERIAL
@@ -663,9 +648,7 @@ void printParams()
   //         SOCMax,
   //         SOCMaxReset,
   //         SOCMin,
-  //         SOCMinReset,
-  //         CellsDifferenceMaxLimit,
-  //         CellsDifferenceMaxReset);
+  //         SOCMinReset;
 
   // Serial.println(outputParams);
 }
@@ -691,7 +674,7 @@ void handleRs485()
       case '8':
     
 #if IS_SDCARD
-      logData(F("Test"));
+      logData(F("T"));
 #endif
       break;
     case '9':
@@ -819,8 +802,8 @@ int getMaxCellVoltageDifference()
 #if IS_RS485
 void printRS485Status()
 {
-  char messageStatusBuffer[67];
-sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+  char messageStatusBuffer[64];
+sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -829,7 +812,7 @@ sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d
           getAdsCellVoltage(1),
           getAdsCellVoltage(2),
           getAdsCellVoltage(3),
-          getMaxCellVoltageDifference(),
+          // getMaxCellVoltageDifference(),
           // vide
           ChargeRelay.getState(),
           LoadRelay.getState(),
@@ -858,7 +841,7 @@ sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d
 void printStatus()
 {
   char messageStatusBuffer[69];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -1262,42 +1245,6 @@ void run()
     MessageTemp = (String)(BatteryVoltageUpdatedTime / 1000);
     logDataMessNum(10, MessageTemp, 1);
   }
-
-  //---
-  // Checking Cells / Batteries differences
-  #if activateCheckingCellsVoltageDifference
-  
-    CellsDifferenceMax = getMaxCellVoltageDifference();
-
-    // Too much voltage difference detected
-    if ((CellsDifferenceMax >= CellsDifferenceMaxLimit) && (CellsDifferenceDetected == false))
-    {
-      // Open Load relay
-      CellsDifferenceDetected = true;
-
-      LoadRelay.forceToOpen();
-      MessageTemp = (String)CellsDifferenceMax;
-      logDataMessNum(11, MessageTemp, 1);
-    }
-    else
-    {
-
-      if (CellsDifferenceDetected == true)
-      {
-
-        // if Votage battery low enough, we close the LoadRelay
-        if (CellsDifferenceMax <= CellsDifferenceMaxReset)
-        {
-          CellsDifferenceDetected = false;
-
-          LoadRelay.setReadyToClose();
-
-          logDataMessNum(12);
-        }
-      }
-    }
-  
-  #endif
 
   //
   // checking for Individual cell voltage detection
