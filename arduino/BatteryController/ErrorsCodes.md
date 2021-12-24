@@ -34,11 +34,11 @@
 #26 High individual cell voltage
     value : num / mV
 #27 RST OK : high V cell good
-    value : num / mV
+    value : Highest cell voltage in mV
 #28 Low cell voltage
     value : num / mV
 #29 RST Cell Voltage
-    value : num / mV
+    value : Lowest cell voltage in mV
 #30 Low T°
     value : T°
 #31 Low T°

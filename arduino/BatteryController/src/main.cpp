@@ -23,7 +23,6 @@
 //------
 // SETTINGS
 
-
 // Opening charge relay for SOC >= SOCMax
 const int SOCMax = 1000;
 
@@ -53,11 +52,10 @@ const int BatteryVoltageMin = 12000; // 12V = 3v / Cell
 const int BatteryVoltageMinReset = 12800; // 12,9  = 3,225v / Cell
 
 // Minimum operating cell voltage
-const int CellVoltageMin = 3100;
+const int CellVoltageMin = 2800;
 
 // Maximum operating cell voltage
 const int CellVoltageMax = 3600;
-
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -167,6 +165,10 @@ BlueSeaLatchingRelay ChargeRelay;
 uint16_t BatteryCellsVoltage[cellsNumber];
 
 uint16_t BatteryVoltage;
+
+uint16_t LowestCellVoltage;
+uint16_t HighestCellVoltage;
+
 unsigned long BatteryVoltageUpdatedTime;
 
 int CellsDifferenceMax;
@@ -249,8 +251,6 @@ void run();
 bool getTime(const char *str);
 bool getDate(const char *str);
 #endif
-
-
 
 void setup()
 {
@@ -339,6 +339,7 @@ void checkCellsVoltage()
   byte iTemp2;
   int iCell; // ne pas toucher le type
   uint16_t vTemp;
+  unsigned int tempCellV = 0;
 
   for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
   {
@@ -362,6 +363,33 @@ void checkCellsVoltage()
       vTemp = 0;
     }
     BatteryCellsVoltage[iCell] = vTemp;
+  }
+
+  // Getting highest Cell and lowest Cell voltage
+  LowestCellVoltage = 0;
+  HighestCellVoltage = 0;
+  for (iTemp2 = (cellsNumber - 1); iTemp2 >= 0; iTemp2--)
+  {
+    if (iTemp2 > 0)
+    {
+      tempCellV = BatteryCellsVoltage[iTemp2] - BatteryCellsVoltage[iTemp2 - 1];
+    }
+    else
+    {
+      tempCellV = BatteryCellsVoltage[iTemp2];
+    }
+
+    // setting the highest cell value
+    if (tempCellV > HighestCellVoltage)
+    {
+      HighestCellVoltage = tempCellV;
+    }
+
+    // setting the lowest cell value
+    if ((tempCellV < LowestCellVoltage) || (LowestCellVoltage == 0))
+    {
+      LowestCellVoltage = tempCellV;
+    }
   }
 }
 
@@ -492,29 +520,29 @@ void readSDCard()
 {
   int data;
 
-  #if IS_RS485
-digitalWrite(RS485PinDE, HIGH);
+#if IS_RS485
+  digitalWrite(RS485PinDE, HIGH);
 #endif
 
   if (!logFile.open(DataLogFile, O_READ))
   {
-    
-    #if IS_RS485
-    // RS485.println(F("NOSDFILE"));
-    #endif
 
-    #if IS_SERIAL
+#if IS_RS485
+// RS485.println(F("NOSDFILE"));
+#endif
+
+#if IS_SERIAL
     Serial.println(F("NOSDFILE"));
-    #endif
+#endif
   }
 
 #if IS_RS485
   // RS485.println(F("SDCARD"));
- #endif
+#endif
 
-    #if IS_SERIAL
-    // Serial.println(F("SDCARD"));
-    #endif
+#if IS_SERIAL
+// Serial.println(F("SDCARD"));
+#endif
 
   while ((data = logFile.read()) >= 0)
   {
@@ -523,14 +551,14 @@ digitalWrite(RS485PinDE, HIGH);
 #endif
 
 #if IS_RS485
-  RS485.write(data);
+    RS485.write(data);
 #endif
-    
+
     delay(2);
   }
 
-  #if IS_RS485
-digitalWrite(RS485PinDE, LOW);
+#if IS_RS485
+  digitalWrite(RS485PinDE, LOW);
 #endif
 
   // close the file:
@@ -601,7 +629,9 @@ void logData(String message, byte nivel)
   if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END))
   {
     // sd.errorHalt("opening test.txt for write failed");
-  } else {
+  }
+  else
+  {
 
     logFile.println(messageDate);
     logFile.close();
@@ -632,7 +662,6 @@ String getDateTime()
   return "";
 #endif
 }
-
 
 void printParams()
 {
@@ -666,13 +695,13 @@ void handleRs485()
       printRS485Status();
       break;
     case '1':
-    
+
 #if IS_SDCARD
       readSDCard();
 #endif
       break;
-      case '8':
-    
+    case '8':
+
 #if IS_SDCARD
       logData(F("T"));
 #endif
@@ -693,21 +722,21 @@ void handleSerial()
   while (Serial.available() > 0)
   {
     char incomingCharacter = Serial.read();
-Serial.println(incomingCharacter);
+    Serial.println(incomingCharacter);
     switch (incomingCharacter)
     {
     case '0':
       printStatus();
       break;
     case '1':
-    
+
 #if IS_SDCARD
       readSDCard();
 #endif
       break;
 
-       case '8':
-    
+    case '8':
+
 #if IS_SDCARD
       logData(F("Test"));
 #endif
@@ -721,7 +750,6 @@ Serial.println(incomingCharacter);
   }
 }
 #endif
-
 
 /**
    Detection if BMV Serial should be collected and used
@@ -758,52 +786,30 @@ boolean isUseBMVSerialInfos()
   return false;
 }
 
+uint16_t getLowestCellVoltage()
+{
+  return LowestCellVoltage;
+}
+
+uint16_t getHighestCellVoltage()
+{
+  return HighestCellVoltage;
+}
+
 /**
    Calculate max cell difference between all cells
    Return value in mV
 */
-int getMaxCellVoltageDifference()
+unsigned int getMaxCellVoltageDifference()
 {
-
-  // Cells voltages
-  // unsigned int cellsVoltage[(cellsNumber - 1)];
-  unsigned int minValue = 0;
-  unsigned int maxValue = 0;
-  unsigned int tempCellV = 0;
-  int iTemp4; // ne pas toucher le type
-
-  for (iTemp4 = (cellsNumber - 1); iTemp4 >= 0; iTemp4--)
-  {
-    if (iTemp4 > 0)
-    {
-      tempCellV = getAdsCellVoltage(iTemp4) - getAdsCellVoltage((iTemp4 - 1));
-    }
-    else
-    {
-      tempCellV = getAdsCellVoltage(iTemp4);
-    }
-
-    //    // enregistrement de la plus grande valeur
-    if (tempCellV > maxValue)
-    {
-      maxValue = tempCellV;
-    }
-
-    if ((tempCellV < minValue) || (minValue == 0))
-    {
-      minValue = tempCellV;
-    }
-  }
-
-  return maxValue - minValue;
+  return HighestCellVoltage - LowestCellVoltage;
 }
-
 
 #if IS_RS485
 void printRS485Status()
 {
   char messageStatusBuffer[64];
-sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -868,7 +874,7 @@ void printStatus()
           LowBatteryTemperatureDetected
 
   );
-   Serial.println(messageStatusBuffer);
+  Serial.println(messageStatusBuffer);
 }
 #endif
 
@@ -1275,23 +1281,6 @@ void run()
       MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(26, MessageTemp, 1);
     }
-    else
-    {
-
-      if (CellVoltageMaxDetected == true)
-      {
-
-        // if voltage cell low enough, we close the LoadRelay
-        if (cellVoltage <= CellVoltageMax)
-        {
-          CellVoltageMaxDetected = false;
-
-          // #27 RST OK : high V cell good
-          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
-          logDataMessNum(27, MessageTemp, 1);
-        }
-      }
-    }
 
     // LOW individual voltage cell detected
     if ((cellVoltage < CellVoltageMin) && (CellVoltageMinDetected == false))
@@ -1307,22 +1296,33 @@ void run()
       MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(28, MessageTemp, 1);
     }
-    else
+  }
+
+  // Reset MAX Individual Cell Voltage
+  if (CellVoltageMaxDetected == true)
+  {
+    // if voltage cell low enough
+    if (HighestCellVoltage <= CellVoltageMax)
     {
+      CellVoltageMaxDetected = false;
 
-      if (CellVoltageMinDetected == true)
-      {
+      // #27 RST OK : high V cell good
+      MessageTemp = (String)cellVoltage;
+      logDataMessNum(27, MessageTemp, 1);
+    }
+  }
 
-        // if voltage cell high enough
-        if (cellVoltage >= CellVoltageMin)
-        {
-          CellVoltageMinDetected = false;
+  // Reset LOW Individual Cell Voltage
+  if (CellVoltageMinDetected == true)
+  {
+    // if voltage cell high enough
+    if (LowestCellVoltage >= CellVoltageMin)
+    {
+      CellVoltageMinDetected = false;
 
-          // #29 RST Cell Voltage
-          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
-          logDataMessNum(29, MessageTemp, 0);
-        }
-      }
+      // #29 RST Cell Voltage
+      MessageTemp = (String)LowestCellVoltage;
+      logDataMessNum(29, MessageTemp, 0);
     }
   }
 
