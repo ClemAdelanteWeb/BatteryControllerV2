@@ -23,7 +23,6 @@
 //------
 // SETTINGS
 
-
 // Opening charge relay for SOC >= SOCMax
 const int SOCMax = 1000;
 
@@ -37,27 +36,33 @@ const int SOCMin = 180;
 const int SOCMinReset = 200;
 
 // SOC Maximum time considerated valid
+// must be > 10 000ms
 // in mS
-const int SOCMaxTimeValid = 10000;
+const int SOCMaxTimeValid = 30000;
 
 // Maximum Voltage security
+// default 13800
 const int BatteryVoltageMax = 13800; // 13,8v = 3,45v / Cell
 
 // Waiting for Max Reset Voltage after reaching Max Voltage (time to discharge the battery enough to use it)
+// default 13360
 const int BatteryVoltageMaxReset = 13360;
 
 // Minimum Voltage security
+// default 12000
 const int BatteryVoltageMin = 12000; // 12V = 3v / Cell
 
 // Waiting for Min Reset Voltage after reaching Min Voltage (time to re-charge the battery enough to use it)
+// default 12800
 const int BatteryVoltageMinReset = 12800; // 12,9  = 3,225v / Cell
 
 // Minimum operating cell voltage
-const int CellVoltageMin = 3100;
+// default 2800
+const int CellVoltageMin = 2800;
 
 // Maximum operating cell voltage
+// default 3600
 const int CellVoltageMax = 3600;
-
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -167,6 +172,10 @@ BlueSeaLatchingRelay ChargeRelay;
 uint16_t BatteryCellsVoltage[cellsNumber];
 
 uint16_t BatteryVoltage;
+
+uint16_t LowestCellVoltage;
+uint16_t HighestCellVoltage;
+
 unsigned long BatteryVoltageUpdatedTime;
 
 int CellsDifferenceMax;
@@ -250,8 +259,6 @@ bool getTime(const char *str);
 bool getDate(const char *str);
 #endif
 
-
-
 void setup()
 {
   pinMode(LoadRelayClosePin, OUTPUT);
@@ -266,14 +273,19 @@ void setup()
   // Pour la lecture de la température
   analogReference(EXTERNAL);
 
-  // Load Relay declaration
-  // LoadRelay.name = F("LR");
+// Load Relay declaration
+#if IS_SERIAL
+  LoadRelay.name = "LR";
+#endif
+
   LoadRelay.openPin = LoadRelayOpenPin;
   LoadRelay.closePin = LoadRelayClosePin;
   LoadRelay.statePin = LoadRelayStatePin;
 
-  // Charge Relay declaration
-  // ChargeRelay.name = F("ChR");
+// Charge Relay declaration
+#if IS_SERIAL
+  ChargeRelay.name = "ChR";
+#endif
   ChargeRelay.openPin = ChargeRelayOpenPin;
   ChargeRelay.closePin = ChargeRelayClosePin;
   ChargeRelay.statePin = ChargeRelayStatePin;
@@ -293,7 +305,7 @@ void setup()
 #endif
 
   RunApplication.onRun(run);
-  RunApplication.setInterval(1000); // 10 sec
+  RunApplication.setInterval(1500); // 1.5 sec loop
 
   ADS.begin();
   ADS.setGain(0);     // 4V volt
@@ -339,7 +351,7 @@ void checkCellsVoltage()
   byte iTemp2;
   int iCell; // ne pas toucher le type
   uint16_t vTemp;
-
+  uint16_t tempCellV = 0;
   for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
   {
     averageCell = 0;
@@ -362,6 +374,39 @@ void checkCellsVoltage()
       vTemp = 0;
     }
     BatteryCellsVoltage[iCell] = vTemp;
+  }
+
+  // Getting highest Cell and lowest Cell voltage
+  LowestCellVoltage = 0;
+  HighestCellVoltage = 0;
+  uint16_t tempCellVA = 0;
+  uint16_t tempCellVB = 0;
+  for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
+  {
+
+    tempCellVA = BatteryCellsVoltage[iCell];
+
+    if (iCell > 0)
+    {
+      tempCellVB = BatteryCellsVoltage[iCell - 1];
+      tempCellV = tempCellVA - tempCellVB;
+    }
+    else
+    {
+      tempCellV = tempCellVA;
+    }
+
+    // setting the highest cell value
+    if (tempCellV > HighestCellVoltage)
+    {
+      HighestCellVoltage = tempCellV;
+    }
+
+    // setting the lowest cell value
+    if ((tempCellV < LowestCellVoltage) || (LowestCellVoltage == 0))
+    {
+      LowestCellVoltage = tempCellV;
+    }
   }
 }
 
@@ -464,6 +509,10 @@ void readBmvData()
         {
           SOC = SOCTemp;
           SOCUpdatedTime = millis();
+
+#if IS_SERIAL
+          Serial.println(F("SOC-UPD"));
+#endif
         }
 
         // begin new serie
@@ -484,6 +533,9 @@ boolean isSOCValid()
     return true;
   }
 
+#if IS_SERIAL
+  Serial.println(F("SOC NO VALID"));
+#endif
   return false;
 }
 
@@ -492,29 +544,29 @@ void readSDCard()
 {
   int data;
 
-  #if IS_RS485
-digitalWrite(RS485PinDE, HIGH);
+#if IS_RS485
+  digitalWrite(RS485PinDE, HIGH);
 #endif
 
   if (!logFile.open(DataLogFile, O_READ))
   {
-    
-    #if IS_RS485
-    // RS485.println(F("NOSDFILE"));
-    #endif
 
-    #if IS_SERIAL
+#if IS_RS485
+// RS485.println(F("NOSDFILE"));
+#endif
+
+#if IS_SERIAL
     Serial.println(F("NOSDFILE"));
-    #endif
+#endif
   }
 
 #if IS_RS485
   // RS485.println(F("SDCARD"));
- #endif
+#endif
 
-    #if IS_SERIAL
-    // Serial.println(F("SDCARD"));
-    #endif
+#if IS_SERIAL
+// Serial.println(F("SDCARD"));
+#endif
 
   while ((data = logFile.read()) >= 0)
   {
@@ -523,14 +575,14 @@ digitalWrite(RS485PinDE, HIGH);
 #endif
 
 #if IS_RS485
-  RS485.write(data);
+    RS485.write(data);
 #endif
-    
+
     delay(2);
   }
 
-  #if IS_RS485
-digitalWrite(RS485PinDE, LOW);
+#if IS_RS485
+  digitalWrite(RS485PinDE, LOW);
 #endif
 
   // close the file:
@@ -601,7 +653,9 @@ void logData(String message, byte nivel)
   if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END))
   {
     // sd.errorHalt("opening test.txt for write failed");
-  } else {
+  }
+  else
+  {
 
     logFile.println(messageDate);
     logFile.close();
@@ -609,8 +663,10 @@ void logData(String message, byte nivel)
 
 #endif
 
-  // Serial.println(message);
-  //  Serial.println(F("-"));
+#if IS_SERIAL
+  Serial.println(message);
+  Serial.println(F("-"));
+#endif
 }
 
 String getDateTime()
@@ -632,7 +688,6 @@ String getDateTime()
   return "";
 #endif
 }
-
 
 void printParams()
 {
@@ -666,13 +721,13 @@ void handleRs485()
       printRS485Status();
       break;
     case '1':
-    
+
 #if IS_SDCARD
       readSDCard();
 #endif
       break;
-      case '8':
-    
+    case '8':
+
 #if IS_SDCARD
       logData(F("T"));
 #endif
@@ -693,21 +748,21 @@ void handleSerial()
   while (Serial.available() > 0)
   {
     char incomingCharacter = Serial.read();
-Serial.println(incomingCharacter);
+    Serial.println(incomingCharacter);
     switch (incomingCharacter)
     {
     case '0':
       printStatus();
       break;
     case '1':
-    
+
 #if IS_SDCARD
       readSDCard();
 #endif
       break;
 
-       case '8':
-    
+    case '8':
+
 #if IS_SDCARD
       logData(F("Test"));
 #endif
@@ -721,7 +776,6 @@ Serial.println(incomingCharacter);
   }
 }
 #endif
-
 
 /**
    Detection if BMV Serial should be collected and used
@@ -755,55 +809,37 @@ boolean isUseBMVSerialInfos()
     }
   }
 
+#if IS_SERIAL
+
+#endif
+
   return false;
+}
+
+uint16_t getLowestCellVoltage()
+{
+  return LowestCellVoltage;
+}
+
+uint16_t getHighestCellVoltage()
+{
+  return HighestCellVoltage;
 }
 
 /**
    Calculate max cell difference between all cells
    Return value in mV
 */
-int getMaxCellVoltageDifference()
+unsigned int getMaxCellVoltageDifference()
 {
-
-  // Cells voltages
-  // unsigned int cellsVoltage[(cellsNumber - 1)];
-  unsigned int minValue = 0;
-  unsigned int maxValue = 0;
-  unsigned int tempCellV = 0;
-  int iTemp4; // ne pas toucher le type
-
-  for (iTemp4 = (cellsNumber - 1); iTemp4 >= 0; iTemp4--)
-  {
-    if (iTemp4 > 0)
-    {
-      tempCellV = getAdsCellVoltage(iTemp4) - getAdsCellVoltage((iTemp4 - 1));
-    }
-    else
-    {
-      tempCellV = getAdsCellVoltage(iTemp4);
-    }
-
-    //    // enregistrement de la plus grande valeur
-    if (tempCellV > maxValue)
-    {
-      maxValue = tempCellV;
-    }
-
-    if ((tempCellV < minValue) || (minValue == 0))
-    {
-      minValue = tempCellV;
-    }
-  }
-
-  return maxValue - minValue;
+  return HighestCellVoltage - LowestCellVoltage;
 }
-
 
 #if IS_RS485
 void printRS485Status()
 {
   char messageStatusBuffer[64];
-sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -840,8 +876,8 @@ sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d
 #if IS_SERIAL
 void printStatus()
 {
-  char messageStatusBuffer[69];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d*"),
+  char messageStatusBuffer[71];
+  sprintf(messageStatusBuffer, ("$%d;%d;%d--%d;%d;%d;%d;%d--%d;%d--%d;%d;%d;%d--%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -868,7 +904,7 @@ void printStatus()
           LowBatteryTemperatureDetected
 
   );
-   Serial.println(messageStatusBuffer);
+  Serial.println(messageStatusBuffer);
 }
 #endif
 
@@ -923,6 +959,9 @@ void run()
   // Va rechercher les valeurs des cellules pour cette boucle
   checkCellsVoltage();
 
+#if IS_SERIAL
+  printStatus();
+#endif
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
 
@@ -951,7 +990,6 @@ void run()
 
         if ((SOCCurrent > SOCMin))
         {
-
           LoadRelay.setReadyToClose();
 
           // #15 SOC Current > SOC Min
@@ -988,7 +1026,6 @@ void run()
 
         if ((SOCCurrent < SOCMax))
         {
-
           ChargeRelay.setReadyToClose();
 
           // #17 SOC Current < SOC Max Charge relay closing
@@ -998,10 +1035,9 @@ void run()
       // Without SOC
       else
       {
-
         ChargeRelay.setReadyToClose();
 
-        // #18 SOC Charge relay closing, routine without SOC
+        // #18 Charge relay closing, routine without SOC
         logDataMessNum(18);
       }
     }
@@ -1040,7 +1076,7 @@ void run()
         SOCChargeCycling = false;
         LoadRelay.setReadyToClose();
 
-        // #20 Loading relay closing without SOC
+        // #20 Loading relay closing, routine without SOC
         logDataMessNum(20);
       }
     }
@@ -1085,16 +1121,19 @@ void run()
 
   // if Charge relay has been manualy closed and doesn't match with the code
   // Relay must be opened
-  if ((SOCDischargeCycling == true) || (HighVoltageDetected == true))
+  // if not currently opening
+  if (ChargeRelay.waitingForOpening != true)
   {
-    if (ChargeRelay.getState() != ChargeRelay.RELAY_OPEN)
+    if ((SOCDischargeCycling == true) || (HighVoltageDetected == true))
     {
+      if ((ChargeRelay.getState() != ChargeRelay.RELAY_OPEN))
+      {
+        ChargeRelay.setReadyToOpen();
 
-      ChargeRelay.setReadyToOpen();
-
-      // #23 Wrong Charging Relay state, opening
-      MessageTemp = (String)ChargeRelay.getState() + F("!=") + (String)ChargeRelay.RELAY_OPEN;
-      logDataMessNum(23, MessageTemp);
+        // #23 Wrong Charging Relay state, opening
+        MessageTemp = (String)ChargeRelay.getState() + F("!=") + (String)ChargeRelay.RELAY_OPEN;
+        logDataMessNum(23, MessageTemp);
+      }
     }
   }
 
@@ -1118,17 +1157,20 @@ void run()
     // SOC Max detection
     if ((SOCCurrent >= SOCMax) && (SOCDischargeCycling == false))
     {
+      // if not currently opening
+      if (ChargeRelay.waitingForOpening != true)
+      {
+        // Open Charge Relay
+        SOCDischargeCycling = true;
+        ChargeRelay.setReadyToOpen();
 
-      // Open Charge Relay
-      SOCDischargeCycling = true;
-      ChargeRelay.setReadyToOpen();
-
-      // #25 SOC Current > Max : current/max"
-      MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMax;
-      logDataMessNum(25, MessageTemp);
+        // #25 SOC Current > Max : current/max"
+        MessageTemp = (String)SOCCurrent + ValuesSpacer + (String)SOCMax;
+        logDataMessNum(25, MessageTemp);
+      }
     }
-
-    // SOC Min detection
+    // SOC Min detection when no Charging Cycle
+    // => init Charging Cycling
     if ((SOCCurrent <= SOCMin) && (SOCChargeCycling == false))
     {
 
@@ -1146,27 +1188,35 @@ void run()
   if ((millis() - BatteryVoltageUpdatedTime) < 6000)
   {
 
-    // high voltage detection
-    if ((CurrentBatteryVoltage >= BatteryVoltageMax) && (HighVoltageDetected == false))
-    {
-      // Open Charge Relay
-      HighVoltageDetected = true;
-
-      ChargeRelay.forceToOpen();
-      MessageTemp = (String)(CurrentBatteryVoltage);
-      logDataMessNum(2, MessageTemp, 0);
-    }
-    else
+    // if not currently opening
+    if (ChargeRelay.waitingForOpening != true)
     {
 
-      if (HighVoltageDetected == true)
+      // NEW high voltage detection
+      if ((CurrentBatteryVoltage >= BatteryVoltageMax) && (HighVoltageDetected == false))
+      {
+        // Open Charge Relay
+        HighVoltageDetected = true;
+
+        // set ready to open instead of forceOpen to let delay opening starts
+        ChargeRelay.setReadyToOpen();
+
+        MessageTemp = (String)(CurrentBatteryVoltage);
+        logDataMessNum(2, MessageTemp, 0);
+      }
+      // HIGH VOLTAGE already detected
+      else if (HighVoltageDetected == true)
       {
 
-        if (ChargeRelay.getState() == ChargeRelay.RELAY_CLOSE)
+        // if not currently opening
+        if (ChargeRelay.waitingForOpening != true)
         {
-
-          ChargeRelay.forceToOpen();
-          logDataMessNum(3);
+          // anormal state, force to open
+          if (ChargeRelay.getState() == ChargeRelay.RELAY_CLOSE)
+          {
+            ChargeRelay.forceToOpen();
+            logDataMessNum(3);
+          }
         }
 
         // if Voltage battery low enough, we close the Charge Relay
@@ -1239,7 +1289,6 @@ void run()
   else
   {
     // Erreur !! Temps écoulé depuis dernière valeur valide
-
     LoadRelay.forceToOpen();
 
     MessageTemp = (String)(BatteryVoltageUpdatedTime / 1000);
@@ -1275,23 +1324,6 @@ void run()
       MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(26, MessageTemp, 1);
     }
-    else
-    {
-
-      if (CellVoltageMaxDetected == true)
-      {
-
-        // if voltage cell low enough, we close the LoadRelay
-        if (cellVoltage <= CellVoltageMax)
-        {
-          CellVoltageMaxDetected = false;
-
-          // #27 RST OK : high V cell good
-          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
-          logDataMessNum(27, MessageTemp, 1);
-        }
-      }
-    }
 
     // LOW individual voltage cell detected
     if ((cellVoltage < CellVoltageMin) && (CellVoltageMinDetected == false))
@@ -1307,22 +1339,33 @@ void run()
       MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
       logDataMessNum(28, MessageTemp, 1);
     }
-    else
+  }
+
+  // Reset MAX Individual Cell Voltage
+  if (CellVoltageMaxDetected == true)
+  {
+    // if voltage cell low enough
+    if (HighestCellVoltage <= CellVoltageMax)
     {
+      CellVoltageMaxDetected = false;
 
-      if (CellVoltageMinDetected == true)
-      {
+      // #27 RST OK : high V cell good
+      MessageTemp = (String)cellVoltage;
+      logDataMessNum(27, MessageTemp, 1);
+    }
+  }
 
-        // if voltage cell high enough
-        if (cellVoltage >= CellVoltageMin)
-        {
-          CellVoltageMinDetected = false;
+  // Reset LOW Individual Cell Voltage
+  if (CellVoltageMinDetected == true)
+  {
+    // if voltage cell high enough
+    if (LowestCellVoltage >= CellVoltageMin)
+    {
+      CellVoltageMinDetected = false;
 
-          // #29 RST Cell Voltage
-          MessageTemp = (String)(i) + ValuesSpacer + (String)cellVoltage;
-          logDataMessNum(29, MessageTemp, 0);
-        }
-      }
+      // #29 RST Cell Voltage
+      MessageTemp = (String)LowestCellVoltage;
+      logDataMessNum(29, MessageTemp, 0);
     }
   }
 

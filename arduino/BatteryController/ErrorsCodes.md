@@ -18,27 +18,30 @@
 #13 Cells diff upd > 10s
 #14 ADS 3 cell voltage not available
 #15 SOC Current > SOC Min
+    => normal routine detection
 #16 Load relay closing, routine without SOC
 #17 SOC Current < SOC Max Charge relay closing
     => can happen when forcing open Charge Relay manually 
-#18 SOC Charge relay closing, routine without SOC
+#18 Charge relay closing, routine without SOC
 #19 SOC min reset reached
     values : SOCCurrent/SOCMinReset
-#20 Loading relay closing without SOC    
+#20 Loading relay closing, routine without SOC    
 #21 Cancelling Discharge Cycling
     values : SOCCurrent/SOCMaxReset
 #22 Cancelling Discharge Cycling without SOC
-#23 Wrong Charging relay state, opening
+#23 Wrong Charging relay state, opening 
+    => Can append when manually closing Charge Relay
+    => Can also append when HighVoltage detected is going to be RESET AND SOC is just reconnected, normal routine
 #24 Wrong Loading relay state, opening
 #25 SOC Current > Max : current/max
 #26 High individual cell voltage
     value : num / mV
 #27 RST OK : high V cell good
-    value : num / mV
+    value : Highest cell voltage in mV
 #28 Low cell voltage
     value : num / mV
 #29 RST Cell Voltage
-    value : num / mV
+    value : Lowest cell voltage in mV
 #30 Low T°
     value : T°
 #31 Low T°
@@ -47,3 +50,33 @@
 
                MessageTemp = (String)SOCCurrent + F(",") + TxtSpacer + (String)SOCMin;
                logDataMessNum(15);
+
+
+
+sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d*"),
+          getBatteryVoltage(),
+          getBatteryTemperature(),
+          getBatterySOC(),
+          // vide
+          getAdsCellVoltage(0),
+          getAdsCellVoltage(1),
+          getAdsCellVoltage(2),
+          getAdsCellVoltage(3),
+          getMaxCellVoltageDifference(),
+          // vide
+          ChargeRelay.getState(),
+          LoadRelay.getState(),
+          // vide
+          SOCChargeCycling,
+          SOCDischargeCycling,
+          isEnabledBMVSerialInfos(),
+          isUseBMVSerialInfos(),
+          // vide
+          LowVoltageDetected,
+           ,
+          CellsDifferenceDetected,
+          CellVoltageMinDetected,
+          CellVoltageMaxDetected,
+          LowBatteryTemperatureDetected
+
+  );
