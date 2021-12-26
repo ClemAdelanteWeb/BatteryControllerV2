@@ -1,9 +1,19 @@
 ### 2021-12-26 
 Refonte complète du PCB pour y intégrer une horloge et un support de carte SD pour faire du logging.
+
 Ajout d'une sortie Charging qui permet de couper / lancer une source de charge en fonction de l'état de la batterie.
+
 Une temporisation de quelques secondes a été insérée pour que cette sortie Charging = 0 avant que le relais de Charge ne soit réellement ouvert (charge bloquée), pour éviter quel l'alternateur ne débite d'un coup dans la batterie moteur ou que l'alternateur d'arbre continue de débiter à fond dans la batterie moteur.
+
 Une sortie RS485 est intégrée pour afficher les informations depuis un autre Arduino. L'arduino NANO manque cruellement de RAM et SRAM pour permettre d'autre développement, comme le logging des valeurs les plus hautes ou plus basses (tensions de la batterie ou des cellules), etc.
+
 Ces développements se feront peut-être avec un Arduino Nano Every ou STM32 Nucleo par exemple. Mais je réfléchis à une V3 avec un ESP32, ce qui permettrait d'émettre les informations en WIFI ou bluetooth BLE.
+
+VIA RS485, les commandes sont les suivantes :
+- 0 : print status
+- 1 : print all data stored in SD CARD
+- 9 : remove SD card file
+- 8 : create SD Card file and add first entry in it
 
 ### dernier update 2020-01-08
 Modification du comportement de la détection du voltage minimum de la batterie suite à un problème pendant 2 mois d'absence.
