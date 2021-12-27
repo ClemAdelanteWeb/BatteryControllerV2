@@ -62,7 +62,7 @@ const int CellVoltageMin = 2800;
 
 // Maximum operating cell voltage
 // default 3600
-const int CellVoltageMax = 3600;
+const int CellVoltageMax = 3650;
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -100,10 +100,16 @@ const byte cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-    0.1780487,
-    0.2142193,
-    0.4980978,
-    0.5896120};
+  0.11947112,
+  0.22990510,
+  0.32871799,
+  0.42400728
+};
+
+// number of sample taken to average cell voltage 
+// mode=4 so 128 samples per seconde = 8ms/sample
+// delay of 2ms between samples so 
+#define ADS_SAMPLE_NBR 6
 
 // LOGGING Params
 #if IS_RTC
@@ -308,9 +314,9 @@ void setup()
   RunApplication.setInterval(1500); // 1.5 sec loop
 
   ADS.begin();
-  ADS.setGain(0);     // 4V volt
+  ADS.setGain(1);     // 4V volt max for each entry
   ADS.setMode(1);     // mesures à la demande
-  ADS.setDataRate(5); // vitesse de mesure de 1 à 7
+  ADS.setDataRate(4); // vitesse de mesure 4 = 128 sample / Seconde
   ADS.readADC(0);     // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 
 #if IS_SDCARD
@@ -357,15 +363,15 @@ void checkCellsVoltage()
     averageCell = 0;
 
     // take N samples in a row, with a slight delay
-    for (iTemp2 = 0; iTemp2 < 5; iTemp2++)
+    for (iTemp2 = 0; iTemp2 < ADS_SAMPLE_NBR; iTemp2++)
     {
       averageCell += ADS.readADC(iCell);
       // Serial.println(averageCell);
-      delay(10);
+      delay(9);
     }
 
     // moyenne des échantillons
-    averageCell = averageCell / 5;
+    averageCell = averageCell / ADS_SAMPLE_NBR;
 
     vTemp = (int)(averageCell * adc_calibration[iCell]);
 
@@ -838,8 +844,8 @@ unsigned int getMaxCellVoltageDifference()
 #if IS_RS485
 void printRS485Status()
 {
-  char messageStatusBuffer[64];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;;%d;%d;;%d;%d;%d;%d;;%d;%d;%d;%d;%d;%d"),
+  char messageStatusBuffer[70];
+  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;;%d;%d;;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -848,13 +854,14 @@ void printRS485Status()
           getAdsCellVoltage(1),
           getAdsCellVoltage(2),
           getAdsCellVoltage(3),
-          // getMaxCellVoltageDifference(),
+          getMaxCellVoltageDifference(),
           // vide
           ChargeRelay.getState(),
           LoadRelay.getState(),
           // vide
           SOCChargeCycling,
           SOCDischargeCycling,
+          // vide
           isEnabledBMVSerialInfos(),
           isUseBMVSerialInfos(),
           // vide
@@ -962,6 +969,11 @@ void run()
 #if IS_SERIAL
   printStatus();
 #endif
+
+#if IS_RS485
+ printRS485Status();
+#endif
+
   // storing BatteryVoltage in temp variable
   int CurrentBatteryVoltage = getBatteryVoltage();
 

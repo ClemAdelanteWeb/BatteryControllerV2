@@ -14,10 +14,10 @@ const int cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-  0.1780487,
-  0.2142193,
-  0.4980978,
-  0.5896120
+  0.11947112,
+  0.22990510,
+  0.32871799,
+  0.42420728
 };
 
 
@@ -36,13 +36,13 @@ uint16_t getAdsCellVoltage(int cellNumber);
 
 void setup(void) 
 {
-  Serial.begin(19200);
+  Serial.begin(38400);
   Serial.println("Hello!");
   
   ADS.begin();
-  ADS.setGain(0);       //4V volt
+  ADS.setGain(1);       //4V volt
   ADS.setMode(1);       // mesures à la demande
-  ADS.setDataRate(6);   // vitesse de mesure de 1 à 7
+  ADS.setDataRate(4);   // vitesse de mesure de 1 à 7
   ADS.readADC(0);       // Et on fait une lecture à vide, pour envoyer tous ces paramètres
 }
 
@@ -51,7 +51,7 @@ void loop(void)
   Serial.println("Loop");
   checkCellsVoltage();
   //printStatus();
-  delay(3000);
+  delay(5000);
 }
 
 
@@ -79,13 +79,15 @@ void checkCellsVoltage()
   unsigned long averageCell;
   int iCell, iTemp2;
   uint16_t vTemp;
+  uint16_t PastCell;
 
-  for (iCell = (cellsNumber - 1); iCell >= 0; iCell--)
+PastCell = 0;
+  for (iCell = 0; iCell < cellsNumber; iCell++)
   {
     averageCell = 0;
 
     // take N samples in a row, with a slight delay
-    for (iTemp2 = 0; iTemp2 < 5; iTemp2++)
+    for (iTemp2 = 0; iTemp2 < NUMSAMPLES; iTemp2++)
     {
       averageCell += ADS.readADC(iCell);
       // Serial.println(averageCell);
@@ -93,22 +95,25 @@ void checkCellsVoltage()
     }
 
     // moyenne des échantillons
-    averageCell = averageCell / 5;
+    averageCell = averageCell / NUMSAMPLES;
 
   
 
     vTemp = (int)(averageCell * adc_calibration[iCell]);
 
-          Serial.print("Averaage : "); Serial.print(iCell); Serial.print(" ");
+          Serial.print("Average : "); Serial.print(iCell+1); Serial.print(" ");
        Serial.print(averageCell); Serial.print(" / ");
-       Serial.println(vTemp);
-
+       Serial.print(vTemp);Serial.print(" / ");
+Serial.println((vTemp-PastCell));
     if (vTemp < 0)
     {
       vTemp = 0;
     }
+PastCell = vTemp;
+
     BatteryCellsVoltage[iCell] = vTemp;
   }
+  
 }
 
 
