@@ -5,7 +5,7 @@
 // ADS1115 on I2C0x48 adress
 ADS1115 ADS(0x48);
 
-#define NUMSAMPLES 10
+#define NUMSAMPLES 20
 
 // Number of cells in the battery
 const int cellsNumber = 4;
@@ -17,7 +17,7 @@ const float adc_calibration[cellsNumber] = {
   0.11947112,
   0.22990510,
   0.32871799,
-  0.42420728
+  0.422045
 };
 
 

@@ -103,13 +103,13 @@ const float adc_calibration[cellsNumber] = {
   0.11947112,
   0.22990510,
   0.32871799,
-  0.42400728
+  0.422045
 };
 
 // number of sample taken to average cell voltage 
 // mode=4 so 128 samples per seconde = 8ms/sample
 // delay of 2ms between samples so 
-#define ADS_SAMPLE_NBR 6
+#define ADS_SAMPLE_NBR 10
 
 // LOGGING Params
 #if IS_RTC
@@ -558,7 +558,7 @@ void readSDCard()
   {
 
 #if IS_RS485
-// RS485.println(F("NOSDFILE"));
+ RS485.println(F("$E;NOSDFILE*"));
 #endif
 
 #if IS_SERIAL
@@ -844,8 +844,8 @@ unsigned int getMaxCellVoltageDifference()
 #if IS_RS485
 void printRS485Status()
 {
-  char messageStatusBuffer[70];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d;;%d;%d;%d;%d;%d;;%d;%d;;%d;%d;;%d;%d;;%d;%d;%d;%d;%d;%d*"),
+  char messageStatusBuffer[74];
+  sprintf(messageStatusBuffer, ("$ST;%d;%d;%d; ;%d;%d;%d;%d; ;%d;%d; ;%d;%d; ;%d;%d; ;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -854,7 +854,6 @@ void printRS485Status()
           getAdsCellVoltage(1),
           getAdsCellVoltage(2),
           getAdsCellVoltage(3),
-          getMaxCellVoltageDifference(),
           // vide
           ChargeRelay.getState(),
           LoadRelay.getState(),
