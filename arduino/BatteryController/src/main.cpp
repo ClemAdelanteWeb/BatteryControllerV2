@@ -46,7 +46,7 @@ const int BatteryVoltageMax = 13800; // 13,8v = 3,45v / Cell
 
 // Waiting for Max Reset Voltage after reaching Max Voltage (time to discharge the battery enough to use it)
 // default 13360
-const int BatteryVoltageMaxReset = 13360;
+const int BatteryVoltageMaxReset = 13200;
 
 // Minimum Voltage security
 // default 12000
@@ -62,7 +62,7 @@ const int CellVoltageMin = 2800;
 
 // Maximum operating cell voltage
 // default 3600
-const int CellVoltageMax = 3650;
+const int CellVoltageMax = 3750;
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -100,15 +100,14 @@ const byte cellsNumber = 4;
 // Ex: 10 / 18107 = 0,000552273
 // cell 1, 2, 3, 4 etc
 const float adc_calibration[cellsNumber] = {
-  0.11947112,
-  0.22990510,
-  0.32871799,
-  0.422045
-};
+    0.11947112,
+    0.22990510,
+    0.32871799,
+    0.422045};
 
-// number of sample taken to average cell voltage 
+// number of sample taken to average cell voltage
 // mode=4 so 128 samples per seconde = 8ms/sample
-// delay of 2ms between samples so 
+// delay of 2ms between samples so
 #define ADS_SAMPLE_NBR 10
 
 // LOGGING Params
@@ -125,6 +124,10 @@ const char *monthName[12] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 #endif
 
+
+#if IS_SERIAL
+#include <MemoryFree.h>
+#endif
 // Log on SD Card
 
 #if IS_SDCARD
@@ -205,10 +208,6 @@ bool HighVoltageDetected = false;
 // Load relay is closed
 bool LowVoltageDetected = false;
 
-// If a High voltage difference has been detected between cells
-// waiting for a lower difference
-// Charge And Load relay are closed, Alarm is ON
-bool CellsDifferenceDetected = false;
 
 // If an individual cell voltage is too low
 // waiting for a higher value
@@ -305,7 +304,7 @@ void setup()
   Bmv.begin(19200); // Victron Baudrate = 19200
 
 #if IS_RS485
-  RS485.begin(38400);
+  RS485.begin(57600);
   pinMode(RS485PinDE, OUTPUT);
   digitalWrite(RS485PinDE, LOW); // receiving mode
 #endif
@@ -558,7 +557,7 @@ void readSDCard()
   {
 
 #if IS_RS485
- RS485.println(F("$E;NOSDFILE*"));
+    RS485.println(F("$E;NOSDFILE*"));
 #endif
 
 #if IS_SERIAL
@@ -844,8 +843,9 @@ unsigned int getMaxCellVoltageDifference()
 #if IS_RS485
 void printRS485Status()
 {
-  char messageStatusBuffer[74];
-  sprintf(messageStatusBuffer, ("$ST;%d;%d;%d; ;%d;%d;%d;%d; ;%d;%d; ;%d;%d; ;%d;%d; ;%d;%d;%d;%d;%d;%d*"),
+
+  char messageStatusBuffer[90];
+  sprintf(messageStatusBuffer, ("$S;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -866,12 +866,31 @@ void printRS485Status()
           // vide
           LowVoltageDetected,
           HighVoltageDetected,
-          CellsDifferenceDetected,
           CellVoltageMinDetected,
           CellVoltageMaxDetected,
           LowBatteryTemperatureDetected
 
   );
+
+  // checksum calculation
+  uint8_t checksum = 0;
+  unsigned int sentenceIndex = 1; // Skip $ character at beginning
+  const unsigned int sentencelength = strlen(messageStatusBuffer);
+  for (; (sentenceIndex < sentencelength); ++sentenceIndex)
+  {
+    const char c = messageStatusBuffer[sentenceIndex];
+    if (c == '*')
+      break;
+    checksum = checksum ^ c;
+  }
+
+  // deleting * char (last char)
+  messageStatusBuffer[sentencelength - 1] = ';';
+
+  // concat checksum to the sentence
+  char messageEnd[6];
+  sprintf(messageEnd, "%d*", checksum);
+strcat(messageStatusBuffer,messageEnd);
 
   digitalWrite(RS485PinDE, HIGH);
   RS485.println(messageStatusBuffer);
@@ -882,8 +901,8 @@ void printRS485Status()
 #if IS_SERIAL
 void printStatus()
 {
-  char messageStatusBuffer[71];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d--%d;%d;%d;%d;%d--%d;%d--%d;%d;%d;%d--%d;%d;%d;%d;%d;%d*"),
+  char messageStatusBuffer[90];
+  sprintf(messageStatusBuffer, ("$%d;%d;%d; ;%d;%d;%d;%d;%d; ;%d;%d; ;%d;%d;%d;%d; ;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
@@ -904,12 +923,29 @@ void printStatus()
           // vide
           LowVoltageDetected,
           HighVoltageDetected,
-          CellsDifferenceDetected,
           CellVoltageMinDetected,
           CellVoltageMaxDetected,
           LowBatteryTemperatureDetected
 
   );
+
+  uint8_t checksum = 0;
+  unsigned int sentenceIndex = 1; // Skip $ character at beginning
+  const unsigned int sentencelength = strlen(messageStatusBuffer);
+  for (; (sentenceIndex < sentencelength); ++sentenceIndex)
+  {
+    const char c = messageStatusBuffer[sentenceIndex];
+    if (c == '*')
+      break;
+    checksum = checksum ^ c;
+  }
+
+  // deleting * char (last char)
+  messageStatusBuffer[sentencelength - 1] = '\0';
+
+  // concat checksum to the sentence
+  sprintf(messageStatusBuffer, "%s;%d*", messageStatusBuffer, checksum);
+
   Serial.println(messageStatusBuffer);
 }
 #endif
@@ -966,11 +1002,13 @@ void run()
   checkCellsVoltage();
 
 #if IS_SERIAL
+    Serial.print(F("freeMemory()="));
+      Serial.println(freeMemory());
   printStatus();
 #endif
 
 #if IS_RS485
- printRS485Status();
+  printRS485Status();
 #endif
 
   // storing BatteryVoltage in temp variable
