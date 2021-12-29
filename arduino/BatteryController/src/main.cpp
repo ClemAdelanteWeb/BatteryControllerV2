@@ -20,6 +20,9 @@
 // Définit la date dans le module RTC
 #define SET_DATE 0
 
+// print memory free
+#define IS_PRINT_MEMORY 1
+
 //------
 // SETTINGS
 
@@ -60,9 +63,15 @@ const int BatteryVoltageMinReset = 12800; // 12,9  = 3,225v / Cell
 // default 2800
 const int CellVoltageMin = 2800;
 
+// Minimum cell voltage after a min detected
+const int CellVoltageMinReset = 2900;
+
 // Maximum operating cell voltage
 // default 3600
-const int CellVoltageMax = 3750;
+const int CellVoltageMax = 3600;
+
+// Maximum cell voltage after max dected
+const int CellVoltageMaxReset = 3350;
 
 // Delay time before opening the Charge Relay
 // The charge Output status will be HIGH right away and the charge relay will be opened after the delay
@@ -124,8 +133,7 @@ const char *monthName[12] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 #endif
 
-
-#if IS_SERIAL
+#if IS_PRINT_MEMORY
 #include <MemoryFree.h>
 #endif
 // Log on SD Card
@@ -208,7 +216,6 @@ bool HighVoltageDetected = false;
 // Load relay is closed
 bool LowVoltageDetected = false;
 
-
 // If an individual cell voltage is too low
 // waiting for a higher value
 // force charging, alarm is ON
@@ -252,6 +259,10 @@ String getDateTime();
 
 #if IS_SERIAL
 void printStatus();
+#endif
+
+#if IS_PRINT_MEMORY
+void printRS485Memory();
 #endif
 
 void printRS485Status();
@@ -890,12 +901,23 @@ void printRS485Status()
   // concat checksum to the sentence
   char messageEnd[6];
   sprintf(messageEnd, "%d*", checksum);
-strcat(messageStatusBuffer,messageEnd);
+  strcat(messageStatusBuffer, messageEnd);
 
   digitalWrite(RS485PinDE, HIGH);
   RS485.println(messageStatusBuffer);
   digitalWrite(RS485PinDE, LOW);
 }
+#if IS_PRINT_MEMORY
+void printRS485Memory()
+{
+  char messageEnd[6];
+  sprintf(messageEnd, "$M;%d*", freeMemory());
+
+  digitalWrite(RS485PinDE, HIGH);
+  RS485.println(messageEnd);
+  digitalWrite(RS485PinDE, LOW);
+}
+#endif
 #endif
 
 #if IS_SERIAL
@@ -1002,12 +1024,15 @@ void run()
   checkCellsVoltage();
 
 #if IS_SERIAL
-    Serial.print(F("freeMemory()="));
-      Serial.println(freeMemory());
+  Serial.print(F("freeMemory()="));
+  Serial.println(freeMemory());
   printStatus();
 #endif
 
 #if IS_RS485
+#if IS_PRINT_MEMORY
+  printRS485Memory();
+#endif
   printRS485Status();
 #endif
 
@@ -1394,13 +1419,19 @@ void run()
   if (CellVoltageMaxDetected == true)
   {
     // if voltage cell low enough
-    if (HighestCellVoltage <= CellVoltageMax)
+    if (HighestCellVoltage <= CellVoltageMaxReset)
     {
       CellVoltageMaxDetected = false;
+      ChargeRelay.setReadyToClose();
 
       // #27 RST OK : high V cell good
       MessageTemp = (String)cellVoltage;
       logDataMessNum(27, MessageTemp, 1);
+    }
+    else
+    {
+      // by security, force close each loop
+      ChargeRelay.forceToOpen();
     }
   }
 
@@ -1408,13 +1439,19 @@ void run()
   if (CellVoltageMinDetected == true)
   {
     // if voltage cell high enough
-    if (LowestCellVoltage >= CellVoltageMin)
+    if (LowestCellVoltage >= CellVoltageMinReset)
     {
       CellVoltageMinDetected = false;
+      LoadRelay.setReadyToClose();
 
       // #29 RST Cell Voltage
       MessageTemp = (String)LowestCellVoltage;
       logDataMessNum(29, MessageTemp, 0);
+    }
+    else
+    {
+      // by security, force close on each loop
+      LoadRelay.forceToOpen();
     }
   }
 
