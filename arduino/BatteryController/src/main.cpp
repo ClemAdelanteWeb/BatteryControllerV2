@@ -257,15 +257,14 @@ void logDataMessNum(int num, String values = "", byte nivel = 0);
 
 String getDateTime();
 
-#if IS_SERIAL
-void printStatus();
-#endif
+void printParams();
 
 #if IS_PRINT_MEMORY
-void printRS485Memory();
+void printMemory();
 #endif
 
-void printRS485Status();
+void printStatus();
+
 // int getMaxCellVoltageDifference();
 uint16_t getAdsBatteryVoltage();
 void run();
@@ -564,7 +563,11 @@ void readSDCard()
   digitalWrite(RS485PinDE, HIGH);
 #endif
 
-  if (!logFile.open(DataLogFile, O_READ))
+#ifdef O_RDONLY
+#else
+#define O_RDONLY 0X00
+#endif
+  if (!logFile.open(DataLogFile, O_RDONLY))
   {
 
 #if IS_RS485
@@ -666,7 +669,12 @@ void logData(String message, byte nivel)
 #if IS_SDCARD
   String messageDate = getDateTime() + F(" ") + message;
 
-  if (!logFile.open(DataLogFile, O_RDWR | O_CREAT | O_AT_END))
+#ifdef O_WRONLY
+#else
+#define O_WRONLY 0X01
+#endif
+
+  if (!logFile.open(DataLogFile, O_WRONLY))
   {
     // sd.errorHalt("opening test.txt for write failed");
   }
@@ -705,25 +713,6 @@ String getDateTime()
 #endif
 }
 
-void printParams()
-{
-  // char outputParams[60];
-
-  // // affichage des paramètres actuels
-  // // VBat Max ; VBat Max reset; VBat Min; VBat Min Reset;; SOC Max; SOC Max Reset; SOC Min; SOC Min Reset ;; Cells diff Max, Cells diff Max Reset
-  // sprintf(outputParams, "$%d;%d;%d;%d;;%d;%d;%d;%d;;%d;%d#",
-  //         BatteryVoltageMax,
-  //         BatteryVoltageMaxReset,
-  //         BatteryVoltageMin,
-  //         BatteryVoltageMinReset,
-  //         SOCMax,
-  //         SOCMaxReset,
-  //         SOCMin,
-  //         SOCMinReset;
-
-  // Serial.println(outputParams);
-}
-
 #if IS_RS485
 void handleRs485()
 {
@@ -733,21 +722,26 @@ void handleRs485()
 
     switch (incomingCharacter)
     {
-    case '0':
-      printRS485Status();
-      break;
     case '1':
+      printStatus();
+      break;
 
+    case '2':
 #if IS_SDCARD
       readSDCard();
 #endif
       break;
-    case '8':
 
+    case '3':
+      printParams();
+      break;
+
+    case '8':
 #if IS_SDCARD
       logData(F("T"));
 #endif
       break;
+
     case '9':
 #if IS_SDCARD
       deleteFile();
@@ -767,10 +761,10 @@ void handleSerial()
     Serial.println(incomingCharacter);
     switch (incomingCharacter)
     {
-    case '0':
+    case '1':
       printStatus();
       break;
-    case '1':
+    case '2':
 
 #if IS_SDCARD
       readSDCard();
@@ -851,11 +845,10 @@ unsigned int getMaxCellVoltageDifference()
   return HighestCellVoltage - LowestCellVoltage;
 }
 
-#if IS_RS485
-void printRS485Status()
+void printStatus()
 {
 
-  char messageStatusBuffer[90];
+  char messageStatusBuffer[64];
   sprintf(messageStatusBuffer, ("$S;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d*"),
           getBatteryVoltage(),
           getBatteryTemperature(),
@@ -903,74 +896,66 @@ void printRS485Status()
   sprintf(messageEnd, "%d*", checksum);
   strcat(messageStatusBuffer, messageEnd);
 
+// Serial print
+#if IS_SERIAL
+  Serial.println(messageStatusBuffer);
+#endif
+
+// RS485 print
+#if IS_RS485
   digitalWrite(RS485PinDE, HIGH);
   RS485.println(messageStatusBuffer);
   digitalWrite(RS485PinDE, LOW);
+#endif
 }
-#if IS_PRINT_MEMORY
-void printRS485Memory()
+
+void printMemory()
 {
-  char messageEnd[6];
+  char messageEnd[10];
   sprintf(messageEnd, "$M;%d*", freeMemory());
 
+// Serial
+#if IS_SERIAL
+  Serial.println(messageEnd);
+#endif
+// RS485
+#if IS_RS485
   digitalWrite(RS485PinDE, HIGH);
   RS485.println(messageEnd);
   digitalWrite(RS485PinDE, LOW);
+#endif
 }
-#endif
-#endif
 
-#if IS_SERIAL
-void printStatus()
+void printParams()
 {
-  char messageStatusBuffer[90];
-  sprintf(messageStatusBuffer, ("$%d;%d;%d; ;%d;%d;%d;%d;%d; ;%d;%d; ;%d;%d;%d;%d; ;%d;%d;%d;%d;%d;%d*"),
-          getBatteryVoltage(),
-          getBatteryTemperature(),
-          getBatterySOC(),
-          // vide
-          getAdsCellVoltage(0),
-          getAdsCellVoltage(1),
-          getAdsCellVoltage(2),
-          getAdsCellVoltage(3),
-          getMaxCellVoltageDifference(),
-          // vide
-          ChargeRelay.getState(),
-          LoadRelay.getState(),
-          // vide
-          SOCChargeCycling,
-          SOCDischargeCycling,
-          isEnabledBMVSerialInfos(),
-          isUseBMVSerialInfos(),
-          // vide
-          LowVoltageDetected,
-          HighVoltageDetected,
-          CellVoltageMinDetected,
-          CellVoltageMaxDetected,
-          LowBatteryTemperatureDetected
-
-  );
-
-  uint8_t checksum = 0;
-  unsigned int sentenceIndex = 1; // Skip $ character at beginning
-  const unsigned int sentencelength = strlen(messageStatusBuffer);
-  for (; (sentenceIndex < sentencelength); ++sentenceIndex)
-  {
-    const char c = messageStatusBuffer[sentenceIndex];
-    if (c == '*')
-      break;
-    checksum = checksum ^ c;
-  }
-
-  // deleting * char (last char)
-  messageStatusBuffer[sentencelength - 1] = '\0';
-
-  // concat checksum to the sentence
-  sprintf(messageStatusBuffer, "%s;%d*", messageStatusBuffer, checksum);
-
-  Serial.println(messageStatusBuffer);
-}
+  char messageEnd[64];
+  sprintf(messageEnd, "$P;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d*",
+          SOCMax,
+          SOCMaxReset,
+          SOCMin,
+          SOCMinReset,
+          SOCMaxTimeValid,
+          BatteryVoltageMax,
+          BatteryVoltageMaxReset,
+          BatteryVoltageMin,
+          BatteryVoltageMinReset,
+          CellVoltageMin,
+          CellVoltageMinReset,
+          CellVoltageMax,
+          CellVoltageMaxReset,
+          delayBeforeChargeOpening);
+  // Serial communication
+#if IS_SERIAL
+  Serial.println(messageEnd);
 #endif
+
+// RS485
+#if IS_RS485
+  digitalWrite(RS485PinDE, HIGH);
+  RS485.println(messageEnd);
+  digitalWrite(RS485PinDE, LOW);
+#endif
+}
 
 void loop()
 {
@@ -1023,17 +1008,11 @@ void run()
   // Va rechercher les valeurs des cellules pour cette boucle
   checkCellsVoltage();
 
-#if IS_SERIAL
-  Serial.print(F("freeMemory()="));
-  Serial.println(freeMemory());
-  printStatus();
-#endif
-
 #if IS_RS485
 #if IS_PRINT_MEMORY
-  printRS485Memory();
+  printMemory();
 #endif
-  printRS485Status();
+  printStatus();
 #endif
 
   // storing BatteryVoltage in temp variable
@@ -1509,16 +1488,6 @@ void run()
   {
     digitalWrite(ChargingStatusOutputPin, 1);
   }
-
-  // Send status on Serial line
-#if IS_SERIAL
-  // printStatus();
-#endif
-
-  // Send status on RS485 bus
-#if IS_RS485
-  // printRS485Status();
-#endif
 }
 
 #if SET_DATE
