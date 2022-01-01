@@ -853,21 +853,21 @@ void printStatus()
           getBatteryVoltage(),
           getBatteryTemperature(),
           getBatterySOC(),
-          // vide
+          // 
           getAdsCellVoltage(0),
           getAdsCellVoltage(1),
           getAdsCellVoltage(2),
           getAdsCellVoltage(3),
-          // vide
+          // 
           ChargeRelay.getState(),
           LoadRelay.getState(),
-          // vide
+          // 
           SOCChargeCycling,
           SOCDischargeCycling,
-          // vide
+          // 
           isEnabledBMVSerialInfos(),
           isUseBMVSerialInfos(),
-          // vide
+          // 
           LowVoltageDetected,
           HighVoltageDetected,
           CellVoltageMinDetected,
@@ -929,7 +929,7 @@ void printMemory()
 void printParams()
 {
   char messageEnd[64];
-  sprintf(messageEnd, "$P;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d*",
+  sprintf(messageEnd, "$P;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d*",
           SOCMax,
           SOCMaxReset,
           SOCMin,
